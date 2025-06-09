@@ -12,13 +12,6 @@ export const Header = () => {
             Organize your tasks by importance and urgency
           </p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2">
-            Sort
-            <ChevronDown className="w-4 h-4" />
-          </Button>
-        </div>
       </div>
     </header>
   );

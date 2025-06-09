@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, Calendar, Clock, Tag, Tags } from "lucide-react";
+import { Search, Plus, Calendar, Clock, Tag, Tags } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
 
 interface TaskListViewProps {
@@ -202,11 +201,6 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            More Filters
-          </Button>
         </div>
 
         {/* Active tag filters display */}
