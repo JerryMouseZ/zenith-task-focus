@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Plus, Calendar, Clock, Tag } from "lucide-react";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Filter, Plus, Calendar, Clock, Tag, Tags } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
 
 interface TaskListViewProps {
@@ -59,15 +60,32 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Get all unique tags from tasks
+  const allTags = Array.from(new Set(mockTasks.flatMap(task => task.tags)));
 
   const filteredTasks = mockTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => task.tags.includes(tag));
     
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus && matchesPriority && matchesTags;
   });
+
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const clearTagFilters = () => {
+    setSelectedTags([]);
+  };
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
@@ -145,11 +163,63 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
             </SelectContent>
           </Select>
 
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Tags className="w-4 h-4 mr-2" />
+                Tags
+                {selectedTags.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedTags.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Filter by Tags</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {allTags.map((tag) => (
+                <DropdownMenuCheckboxItem
+                  key={tag}
+                  checked={selectedTags.includes(tag)}
+                  onCheckedChange={() => handleTagToggle(tag)}
+                >
+                  {tag}
+                </DropdownMenuCheckboxItem>
+              ))}
+              {selectedTags.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={clearTagFilters}
+                  >
+                    Clear all tags
+                  </Button>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             More Filters
           </Button>
         </div>
+
+        {/* Active tag filters display */}
+        {selectedTags.length > 0 && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+            <span className="text-sm text-muted-foreground">Filtered by tags:</span>
+            {selectedTags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => handleTagToggle(tag)}>
+                {tag} ×
+              </Badge>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Task List */}
