@@ -6,6 +6,9 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: Date;
+  startTime?: Date;
+  endTime?: Date;
+  isFixedTime?: boolean;
   createdAt: Date;
   updatedAt: Date;
   tags: string[];

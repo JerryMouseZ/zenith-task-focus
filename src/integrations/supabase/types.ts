@@ -36,12 +36,116 @@ export type Database = {
         }
         Relationships: []
       }
+      subtasks: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          task_id: string
+          title: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          task_id: string
+          title: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          task_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          actual_time: number | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          end_time: string | null
+          estimated_time: number | null
+          id: string
+          is_fixed_time: boolean
+          priority: string
+          project_id: string | null
+          start_time: string | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_time?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          end_time?: string | null
+          estimated_time?: number | null
+          id?: string
+          is_fixed_time?: boolean
+          priority?: string
+          project_id?: string | null
+          start_time?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_time?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          end_time?: string | null
+          estimated_time?: number | null
+          id?: string
+          is_fixed_time?: boolean
+          priority?: string
+          project_id?: string | null
+          start_time?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      adjust_task_times_on_delete: {
+        Args: {
+          p_user_id: string
+          p_delete_start_time: string
+          p_duration_minutes: number
+        }
+        Returns: undefined
+      }
+      adjust_task_times_on_insert: {
+        Args: {
+          p_user_id: string
+          p_insert_time: string
+          p_duration_minutes: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,54 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Calendar, Clock, Tag, Tags } from "lucide-react";
+import { Search, Plus, Calendar, Clock, Tag, Tags, Lock } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
+import { useTasks } from "@/hooks/useTasks";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
 }
-
-// Mock data
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "Complete project proposal",
-    description: "Write and review the Q2 project proposal",
-    status: TaskStatus.TODO,
-    priority: TaskPriority.HIGH,
-    dueDate: new Date("2025-06-12"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    tags: ["work", "important"],
-    estimatedTime: 180,
-    subtasks: [],
-  },
-  {
-    id: "2",
-    title: "Team standup meeting",
-    description: "Daily standup with the development team",
-    status: TaskStatus.IN_PROGRESS,
-    priority: TaskPriority.MEDIUM,
-    dueDate: new Date("2025-06-09"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    tags: ["work", "meeting"],
-    estimatedTime: 30,
-    subtasks: [],
-  },
-  {
-    id: "3",
-    title: "Review code PRs",
-    description: "Review pending pull requests",
-    status: TaskStatus.TODO,
-    priority: TaskPriority.MEDIUM,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    tags: ["work", "development"],
-    estimatedTime: 90,
-    subtasks: [],
-  },
-];
 
 export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,10 +21,12 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Get all unique tags from tasks
-  const allTags = Array.from(new Set(mockTasks.flatMap(task => task.tags)));
+  const { tasks, isLoading, updateTask } = useTasks();
 
-  const filteredTasks = mockTasks.filter(task => {
+  // Get all unique tags from tasks
+  const allTags = Array.from(new Set(tasks.flatMap(task => task.tags)));
+
+  const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
@@ -84,6 +46,11 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
 
   const clearTagFilters = () => {
     setSelectedTags([]);
+  };
+
+  const handleTaskStatusToggle = (task: Task) => {
+    const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.TODO : TaskStatus.COMPLETED;
+    updateTask({ id: task.id, updates: { status: newStatus } });
   };
 
   const getPriorityColor = (priority: TaskPriority) => {
@@ -114,13 +81,49 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
     }
   };
 
+  const getStatusLabel = (status: TaskStatus) => {
+    switch (status) {
+      case TaskStatus.TODO:
+        return "待办";
+      case TaskStatus.IN_PROGRESS:
+        return "进行中";
+      case TaskStatus.COMPLETED:
+        return "已完成";
+      case TaskStatus.OVERDUE:
+        return "已逾期";
+      default:
+        return status;
+    }
+  };
+
+  const getPriorityLabel = (priority: TaskPriority) => {
+    switch (priority) {
+      case TaskPriority.LOW:
+        return "低";
+      case TaskPriority.MEDIUM:
+        return "中";
+      case TaskPriority.HIGH:
+        return "高";
+      default:
+        return priority;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">All Tasks</h1>
+        <h1 className="text-2xl font-semibold">所有任务</h1>
         <Button className="bg-green-500 hover:bg-green-600">
           <Plus className="w-4 h-4 mr-2" />
-          New Task
+          新建任务
         </Button>
       </div>
 
@@ -130,7 +133,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search tasks..."
+              placeholder="搜索任务..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -139,26 +142,26 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder="状态" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value={TaskStatus.TODO}>To Do</SelectItem>
-              <SelectItem value={TaskStatus.IN_PROGRESS}>In Progress</SelectItem>
-              <SelectItem value={TaskStatus.COMPLETED}>Completed</SelectItem>
-              <SelectItem value={TaskStatus.OVERDUE}>Overdue</SelectItem>
+              <SelectItem value="all">所有状态</SelectItem>
+              <SelectItem value={TaskStatus.TODO}>待办</SelectItem>
+              <SelectItem value={TaskStatus.IN_PROGRESS}>进行中</SelectItem>
+              <SelectItem value={TaskStatus.COMPLETED}>已完成</SelectItem>
+              <SelectItem value={TaskStatus.OVERDUE}>已逾期</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Priority" />
+              <SelectValue placeholder="优先级" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value={TaskPriority.HIGH}>High</SelectItem>
-              <SelectItem value={TaskPriority.MEDIUM}>Medium</SelectItem>
-              <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
+              <SelectItem value="all">所有优先级</SelectItem>
+              <SelectItem value={TaskPriority.HIGH}>高</SelectItem>
+              <SelectItem value={TaskPriority.MEDIUM}>中</SelectItem>
+              <SelectItem value={TaskPriority.LOW}>低</SelectItem>
             </SelectContent>
           </Select>
 
@@ -166,7 +169,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <Tags className="w-4 h-4 mr-2" />
-                Tags
+                标签
                 {selectedTags.length > 0 && (
                   <Badge variant="secondary" className="ml-2">
                     {selectedTags.length}
@@ -175,7 +178,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Filter by Tags</DropdownMenuLabel>
+              <DropdownMenuLabel>按标签筛选</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {allTags.map((tag) => (
                 <DropdownMenuCheckboxItem
@@ -195,7 +198,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                     className="w-full justify-start"
                     onClick={clearTagFilters}
                   >
-                    Clear all tags
+                    清除所有标签
                   </Button>
                 </>
               )}
@@ -206,7 +209,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
         {/* Active tag filters display */}
         {selectedTags.length > 0 && (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-            <span className="text-sm text-muted-foreground">Filtered by tags:</span>
+            <span className="text-sm text-muted-foreground">已选择标签:</span>
             {selectedTags.map((tag) => (
               <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => handleTagToggle(tag)}>
                 {tag} ×
@@ -224,21 +227,29 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
             <div className="flex items-start gap-4">
               <Checkbox 
                 checked={task.status === TaskStatus.COMPLETED}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTaskStatusToggle(task);
+                }}
                 className="mt-1"
               />
               
               <div className="flex-1 space-y-2">
                 <div className="flex items-start justify-between">
-                  <h3 className={`font-medium ${task.status === TaskStatus.COMPLETED ? 'line-through text-muted-foreground' : ''}`}>
-                    {task.title}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-medium ${task.status === TaskStatus.COMPLETED ? 'line-through text-muted-foreground' : ''}`}>
+                      {task.title}
+                    </h3>
+                    {task.isFixedTime && (
+                      <Lock className="w-4 h-4 text-amber-500" title="固定时间任务" />
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
+                      {getPriorityLabel(task.priority)}
                     </Badge>
                     <Badge className={getStatusColor(task.status)}>
-                      {task.status.replace('_', ' ')}
+                      {getStatusLabel(task.status)}
                     </Badge>
                   </div>
                 </div>
@@ -260,7 +271,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                   {task.estimatedTime && (
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      {task.estimatedTime}min
+                      {task.estimatedTime}分钟
                     </div>
                   )}
                   
@@ -290,7 +301,9 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
 
       {filteredTasks.length === 0 && (
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">No tasks found matching your criteria.</p>
+          <p className="text-muted-foreground">
+            {tasks.length === 0 ? "暂无任务，点击新建任务开始。" : "没有找到匹配条件的任务。"}
+          </p>
         </Card>
       )}
     </div>

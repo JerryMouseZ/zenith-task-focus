@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Tag, CheckCircle, Circle, Trash } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar, Clock, Tag, CheckCircle, Circle, Trash, Lock } from "lucide-react";
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
+import { useTasks } from "@/hooks/useTasks";
+import { toast } from "sonner";
 
 interface TaskDetailModalProps {
   task: Task | null;
@@ -18,6 +21,7 @@ interface TaskDetailModalProps {
 export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps) => {
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting } = useTasks();
 
   useEffect(() => {
     if (task) {
@@ -31,17 +35,43 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.TODO,
         tags: [],
-        subtasks: []
+        subtasks: [],
+        isFixedTime: false,
       });
       setIsEditing(true);
     }
   }, [task]);
 
-  const handleSave = () => {
-    // In a real app, this would save to the backend
-    console.log("Saving task:", editedTask);
-    setIsEditing(false);
-    onClose();
+  const handleSave = async () => {
+    if (!editedTask.title?.trim()) {
+      toast.error('请输入任务标题');
+      return;
+    }
+
+    try {
+      if (task) {
+        // Update existing task
+        updateTask({ id: task.id, updates: editedTask });
+      } else {
+        // Create new task
+        createTask(editedTask as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
+      }
+      setIsEditing(false);
+      onClose();
+    } catch (error) {
+      console.error('Error saving task:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (task && window.confirm('确定要删除这个任务吗？')) {
+      try {
+        deleteTask(task.id);
+        onClose();
+      } catch (error) {
+        console.error('Error deleting task:', error);
+      }
+    }
   };
 
   const handleCancel = () => {
@@ -60,15 +90,15 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
   };
 
   const statusOptions = [
-    { value: TaskStatus.TODO, label: "To Do" },
-    { value: TaskStatus.IN_PROGRESS, label: "In Progress" },
-    { value: TaskStatus.COMPLETED, label: "Completed" },
+    { value: TaskStatus.TODO, label: "待办" },
+    { value: TaskStatus.IN_PROGRESS, label: "进行中" },
+    { value: TaskStatus.COMPLETED, label: "已完成" },
   ];
 
   const priorityOptions = [
-    { value: TaskPriority.LOW, label: "Low" },
-    { value: TaskPriority.MEDIUM, label: "Medium" },
-    { value: TaskPriority.HIGH, label: "High" }
+    { value: TaskPriority.LOW, label: "低" },
+    { value: TaskPriority.MEDIUM, label: "中" },
+    { value: TaskPriority.HIGH, label: "高" }
   ];
 
   return (
@@ -76,7 +106,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {task ? "Task Details" : "New Task"}
+            {task ? "任务详情" : "新建任务"}
           </DialogTitle>
         </DialogHeader>
 
@@ -84,35 +114,40 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
           {/* Title */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Task Title
+              任务标题 *
             </label>
             {isEditing ? (
               <Input
                 value={editedTask.title || ""}
                 onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-                placeholder="Enter task title..."
+                placeholder="输入任务标题..."
                 className="text-lg"
               />
             ) : (
-              <h2 className="text-xl font-semibold text-gray-900">{editedTask.title}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-gray-900">{editedTask.title}</h2>
+                {editedTask.isFixedTime && (
+                  <Lock className="w-4 h-4 text-amber-500" title="固定时间任务" />
+                )}
+              </div>
             )}
           </div>
 
           {/* Description */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Description
+              描述
             </label>
             {isEditing ? (
               <Textarea
                 value={editedTask.description || ""}
                 onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                placeholder="Add a description..."
+                placeholder="添加描述..."
                 rows={4}
               />
             ) : (
               <p className="text-gray-600">
-                {editedTask.description || "No description provided."}
+                {editedTask.description || "暂无描述"}
               </p>
             )}
           </div>
@@ -121,7 +156,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Status
+                状态
               </label>
               {isEditing ? (
                 <Select
@@ -141,14 +176,14 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
                 </Select>
               ) : (
                 <Badge variant="outline" className="capitalize">
-                  {editedTask.status?.replace('_', ' ')}
+                  {statusOptions.find(s => s.value === editedTask.status)?.label}
                 </Badge>
               )}
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Priority
+                优先级
               </label>
               {isEditing ? (
                 <Select
@@ -168,17 +203,33 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
                 </Select>
               ) : (
                 <Badge className={priorityColors[editedTask.priority as TaskPriority] || ""}>
-                  {editedTask.priority}
+                  {priorityOptions.find(p => p.value === editedTask.priority)?.label}
                 </Badge>
               )}
             </div>
           </div>
 
-          {/* Due Date and Estimated Time */}
+          {/* Fixed Time Checkbox */}
+          {isEditing && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="fixedTime"
+                checked={editedTask.isFixedTime || false}
+                onCheckedChange={(checked) => 
+                  setEditedTask({ ...editedTask, isFixedTime: checked as boolean })
+                }
+              />
+              <label htmlFor="fixedTime" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                固定时间任务（不能被自动调整时间）
+              </label>
+            </div>
+          )}
+
+          {/* Due Date and Start Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Due Date
+                截止时间
               </label>
               {isEditing ? (
                 <Input
@@ -192,82 +243,84 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
               ) : (
                 <div className="flex items-center gap-2 text-gray-600">
                   <Calendar className="w-4 h-4" />
-                  {editedTask.dueDate ? editedTask.dueDate.toLocaleDateString() : "No due date"}
+                  {editedTask.dueDate ? editedTask.dueDate.toLocaleString() : "无截止时间"}
                 </div>
               )}
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Estimated Time (minutes)
+                开始时间
               </label>
               {isEditing ? (
                 <Input
-                  type="number"
-                  value={editedTask.estimatedTime || ""}
+                  type="datetime-local"
+                  value={editedTask.startTime ? editedTask.startTime.toISOString().slice(0, 16) : ""}
                   onChange={(e) => setEditedTask({ 
                     ...editedTask, 
-                    estimatedTime: e.target.value ? parseInt(e.target.value) : undefined 
+                    startTime: e.target.value ? new Date(e.target.value) : undefined 
                   })}
-                  placeholder="60"
                 />
               ) : (
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  {editedTask.estimatedTime ? `${editedTask.estimatedTime} minutes` : "Not estimated"}
+                  <Calendar className="w-4 h-4" />
+                  {editedTask.startTime ? editedTask.startTime.toLocaleString() : "无开始时间"}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Tags */}
+          {/* Estimated Time */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Tags
+              预估时间（分钟）
             </label>
-            <div className="flex flex-wrap gap-2">
-              {editedTask.tags?.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                  <Tag className="w-3 h-3" />
-                  {tag}
-                  {isEditing && (
-                    <button
-                      onClick={() => {
-                        const newTags = editedTask.tags?.filter((_, i) => i !== index) || [];
-                        setEditedTask({ ...editedTask, tags: newTags });
-                      }}
-                      className="ml-1 hover:text-red-600"
-                    >
-                      ×
-                    </button>
-                  )}
-                </Badge>
-              ))}
-              {(editedTask.tags?.length || 0) === 0 && !isEditing && (
-                <span className="text-gray-500">No tags</span>
-              )}
-            </div>
+            {isEditing ? (
+              <Input
+                type="number"
+                value={editedTask.estimatedTime || ""}
+                onChange={(e) => setEditedTask({ 
+                  ...editedTask, 
+                  estimatedTime: e.target.value ? parseInt(e.target.value) : undefined 
+                })}
+                placeholder="60"
+              />
+            ) : (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock className="w-4 h-4" />
+                {editedTask.estimatedTime ? `${editedTask.estimatedTime} 分钟` : "未预估"}
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             {isEditing ? (
               <>
-                <Button variant="outline" onClick={handleCancel}>
-                  Cancel
+                <Button variant="outline" onClick={handleCancel} disabled={isCreating || isUpdating}>
+                  取消
                 </Button>
-                <Button onClick={handleSave} className="bg-green-500 hover:bg-green-600">
-                  {task ? "Save Changes" : "Create Task"}
+                <Button 
+                  onClick={handleSave} 
+                  className="bg-green-500 hover:bg-green-600"
+                  disabled={isCreating || isUpdating}
+                >
+                  {isCreating || isUpdating ? "保存中..." : (task ? "保存更改" : "创建任务")}
                 </Button>
               </>
             ) : (
               <>
                 <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Edit
+                  编辑
                 </Button>
-                <Button variant="destructive" className="gap-2">
+                <Button 
+                  variant="destructive" 
+                  className="gap-2" 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
                   <Trash className="w-4 h-4" />
-                  Delete
+                  {isDeleting ? "删除中..." : "删除"}
                 </Button>
               </>
             )}
