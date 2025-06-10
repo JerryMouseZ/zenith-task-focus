@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
+import { UserMenu } from "./UserMenu";
 
 export const Header = () => {
   return (
@@ -12,6 +13,7 @@ export const Header = () => {
             Organize your tasks by importance and urgency
           </p>
         </div>
+        <UserMenu />
       </div>
     </header>
   );
