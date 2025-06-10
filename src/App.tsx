@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,7 @@ import Tasks from "./pages/Tasks";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Completed from "./pages/Completed";
+import Trash from "./pages/Trash";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +54,11 @@ const App = () => (
             <Route path="/completed" element={
               <ProtectedRoute>
                 <Completed />
+              </ProtectedRoute>
+            } />
+            <Route path="/trash" element={
+              <ProtectedRoute>
+                <Trash />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

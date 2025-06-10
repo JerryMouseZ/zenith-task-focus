@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { Task, TaskStatus } from "@/types/task";
 import { TaskCard } from "./TaskCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, RotateCcw, Trash2 } from "lucide-react";
+import { useTasks } from "@/hooks/useTasks";
 
 interface CompletedTasksViewProps {
   onTaskClick: (task: Task) => void;
@@ -12,52 +12,10 @@ interface CompletedTasksViewProps {
 
 export const CompletedTasksView = ({ onTaskClick }: CompletedTasksViewProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { tasks, isLoading, updateTask, deleteTask } = useTasks();
 
-  // Mock completed tasks data
-  const completedTasks: Task[] = [
-    {
-      id: "1",
-      title: "Complete project documentation",
-      description: "Write comprehensive documentation for the new feature",
-      status: TaskStatus.COMPLETED,
-      priority: "high" as any,
-      dueDate: new Date("2024-01-15"),
-      createdAt: new Date("2024-01-10"),
-      updatedAt: new Date("2024-01-15"),
-      tags: ["documentation", "project"],
-      estimatedTime: 180,
-      actualTime: 165,
-      subtasks: []
-    },
-    {
-      id: "2", 
-      title: "Review pull requests",
-      description: "Review and approve pending pull requests",
-      status: TaskStatus.COMPLETED,
-      priority: "medium" as any,
-      dueDate: new Date("2024-01-14"),
-      createdAt: new Date("2024-01-12"),
-      updatedAt: new Date("2024-01-14"),
-      tags: ["code-review"],
-      estimatedTime: 60,
-      actualTime: 45,
-      subtasks: []
-    },
-    {
-      id: "3",
-      title: "Team meeting preparation",
-      description: "Prepare agenda and materials for weekly team meeting",
-      status: TaskStatus.COMPLETED,
-      priority: "low" as any,
-      dueDate: new Date("2024-01-13"),
-      createdAt: new Date("2024-01-11"),
-      updatedAt: new Date("2024-01-13"),
-      tags: ["meeting", "team"],
-      estimatedTime: 30,
-      actualTime: 25,
-      subtasks: []
-    }
-  ];
+  // 只显示已完成的任务
+  const completedTasks = tasks.filter(task => task.status === TaskStatus.COMPLETED);
 
   const filteredTasks = completedTasks.filter(task =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,14 +24,22 @@ export const CompletedTasksView = ({ onTaskClick }: CompletedTasksViewProps) => 
   );
 
   const handleRestoreTask = (taskId: string) => {
-    console.log("Restoring task:", taskId);
-    // In a real app, this would update the task status back to TODO
+    updateTask({ id: taskId, updates: { status: TaskStatus.TODO } });
   };
 
   const handleDeleteTask = (taskId: string) => {
-    console.log("Permanently deleting task:", taskId);
-    // In a real app, this would permanently delete the task
+    if (window.confirm('确定要永久删除这个任务吗？此操作无法撤销。')) {
+      deleteTask(taskId);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -112,6 +78,7 @@ export const CompletedTasksView = ({ onTaskClick }: CompletedTasksViewProps) => 
                   handleRestoreTask(task.id);
                 }}
                 className="h-8 w-8 p-0"
+                title="恢复任务"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -123,6 +90,7 @@ export const CompletedTasksView = ({ onTaskClick }: CompletedTasksViewProps) => 
                   handleDeleteTask(task.id);
                 }}
                 className="h-8 w-8 p-0"
+                title="永久删除"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>

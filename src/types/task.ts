@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -29,7 +28,8 @@ export enum TaskStatus {
   TODO = "todo",
   IN_PROGRESS = "in_progress",
   COMPLETED = "completed",
-  OVERDUE = "overdue"
+  OVERDUE = "overdue",
+  DELETED = "deleted" // 新增删除状态
 }
 
 export enum TaskPriority {

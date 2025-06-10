@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
+import { useTasks } from "@/hooks/useTasks";
 
 interface CalendarViewProps {
   onTaskClick: (task: Task) => void;
@@ -11,41 +11,15 @@ interface CalendarViewProps {
 
 type ViewMode = "day" | "week" | "month";
 
-// Mock data for demo
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "Team Meeting",
-    description: "Weekly sync with the team",
-    status: TaskStatus.TODO,
-    priority: TaskPriority.HIGH,
-    dueDate: new Date("2025-06-09T10:00:00"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    tags: ["work", "meeting"],
-    estimatedTime: 60,
-    subtasks: [],
-  },
-  {
-    id: "2",
-    title: "Project Review",
-    description: "Review project progress",
-    status: TaskStatus.IN_PROGRESS,
-    priority: TaskPriority.MEDIUM,
-    dueDate: new Date("2025-06-09T14:00:00"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    tags: ["work"],
-    estimatedTime: 120,
-    subtasks: [],
-  },
-];
-
 export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { tasks, isLoading } = useTasks();
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  // 只显示有开始时间的任务
+  const scheduledTasks = tasks.filter(task => task.startTime && task.status !== TaskStatus.COMPLETED);
 
   const renderDayView = () => (
     <div className="grid grid-cols-[80px_1fr] gap-0 border rounded-lg overflow-hidden">
@@ -65,8 +39,10 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         </div>
         {hours.map((hour) => (
           <div key={hour} className="h-16 border-b border-border relative hover:bg-muted/20 cursor-pointer">
-            {mockTasks
-              .filter(task => task.dueDate && task.dueDate.getHours() === hour)
+            {scheduledTasks
+              .filter(task => task.startTime && 
+                task.startTime.toDateString() === currentDate.toDateString() &&
+                task.startTime.getHours() === hour)
               .map(task => (
                 <div
                   key={task.id}
@@ -110,10 +86,10 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             </div>
             {hours.map((hour) => (
               <div key={hour} className="h-12 border-b border-border border-l border-border relative hover:bg-muted/20 cursor-pointer">
-                {mockTasks
-                  .filter(task => task.dueDate && 
-                    task.dueDate.toDateString() === day.toDateString() && 
-                    task.dueDate.getHours() === hour)
+                {scheduledTasks
+                  .filter(task => task.startTime && 
+                    task.startTime.toDateString() === day.toDateString() && 
+                    task.startTime.getHours() === hour)
                   .map(task => (
                     <div
                       key={task.id}
@@ -158,8 +134,8 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
               {day.getDate()}
             </div>
             <div className="space-y-1">
-              {mockTasks
-                .filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString())
+              {scheduledTasks
+                .filter(task => task.startTime && task.startTime.toDateString() === day.toDateString())
                 .slice(0, 3)
                 .map(task => (
                   <div
@@ -176,6 +152,14 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
