@@ -18,8 +18,8 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  // 只显示有开始时间的任务
-  const scheduledTasks = tasks.filter(task => task.startTime && task.status !== TaskStatus.COMPLETED);
+  // 只显示有截止时间的任务
+  const scheduledTasks = tasks.filter(task => task.dueDate && task.status !== TaskStatus.COMPLETED);
 
   const renderDayView = () => (
     <div className="grid grid-cols-[80px_1fr] gap-0 border rounded-lg overflow-hidden">
@@ -40,17 +40,17 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         {hours.map((hour) => (
           <div key={hour} className="h-16 border-b border-border relative hover:bg-muted/20 cursor-pointer">
             {scheduledTasks
-              .filter(task => task.startTime && 
-                task.startTime.toDateString() === currentDate.toDateString() &&
-                task.startTime.getHours() === hour)
+              .filter(task => task.dueDate && 
+                task.dueDate.toDateString() === currentDate.toDateString() &&
+                task.dueDate.getHours() === hour)
               .map(task => (
                 <div
                   key={task.id}
                   onClick={() => onTaskClick(task)}
-                  className="absolute left-2 right-2 top-1 bg-green-100 border-l-4 border-green-500 p-1 rounded text-xs cursor-pointer hover:bg-green-200"
+                  className="absolute left-2 right-2 top-1 bg-red-100 border-l-4 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
                 >
                   <div className="font-medium">{task.title}</div>
-                  <div className="text-muted-foreground">{task.estimatedTime}min</div>
+                  <div className="text-muted-foreground">Due: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
               ))}
           </div>
@@ -87,16 +87,17 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             {hours.map((hour) => (
               <div key={hour} className="h-12 border-b border-border border-l border-border relative hover:bg-muted/20 cursor-pointer">
                 {scheduledTasks
-                  .filter(task => task.startTime && 
-                    task.startTime.toDateString() === day.toDateString() && 
-                    task.startTime.getHours() === hour)
+                  .filter(task => task.dueDate && 
+                    task.dueDate.toDateString() === day.toDateString() && 
+                    task.dueDate.getHours() === hour)
                   .map(task => (
                     <div
                       key={task.id}
                       onClick={() => onTaskClick(task)}
-                      className="absolute inset-1 bg-green-100 border-l-2 border-green-500 p-1 rounded text-xs cursor-pointer hover:bg-green-200"
+                      className="absolute inset-1 bg-red-100 border-l-2 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
                     >
-                      {task.title}
+                      <div className="font-medium truncate">{task.title}</div>
+                      <div className="text-muted-foreground text-xs">Due</div>
                     </div>
                   ))}
               </div>
@@ -135,17 +136,32 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             </div>
             <div className="space-y-1">
               {scheduledTasks
-                .filter(task => task.startTime && task.startTime.toDateString() === day.toDateString())
+                .filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString())
                 .slice(0, 3)
-                .map(task => (
-                  <div
-                    key={task.id}
-                    onClick={() => onTaskClick(task)}
-                    className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded cursor-pointer hover:bg-green-200"
-                  >
-                    {task.title}
-                  </div>
-                ))}
+                .map(task => {
+                  const isOverdue = task.dueDate && task.dueDate < new Date() && task.status !== TaskStatus.COMPLETED;
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => onTaskClick(task)}
+                      className={`text-xs px-1 py-0.5 rounded cursor-pointer hover:opacity-80 ${
+                        isOverdue 
+                          ? 'bg-red-100 text-red-800 border border-red-300' 
+                          : 'bg-orange-100 text-orange-800 border border-orange-300'
+                      }`}
+                    >
+                      <div className="truncate font-medium">{task.title}</div>
+                      <div className="text-xs opacity-75">
+                        Due: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  );
+                })}
+              {scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length > 3 && (
+                <div className="text-xs text-muted-foreground">
+                  +{scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length - 3} more
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -197,6 +213,18 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             New Task
           </Button>
         </div>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <div className="flex items-center gap-2 text-blue-800">
+          <div className="w-3 h-3 bg-orange-500 rounded"></div>
+          <span className="text-sm font-medium">Due Date Tasks</span>
+          <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
+          <span className="text-sm font-medium">Overdue Tasks</span>
+        </div>
+        <p className="text-sm text-blue-700 mt-1">
+          Calendar shows tasks based on their due dates. Orange indicates upcoming deadlines, red indicates overdue tasks.
+        </p>
       </div>
 
       <Card className="p-4">
