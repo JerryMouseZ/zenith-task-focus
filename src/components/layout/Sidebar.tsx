@@ -12,11 +12,11 @@ export const Sidebar = ({ onNewTask }: SidebarProps) => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: Inbox, label: "Priority Matrix", path: "/", active: false },
-    { icon: List, label: "All Tasks", path: "/tasks", active: false },
+    { icon: Inbox, label: "优先矩阵", path: "/", active: false },
+    { icon: List, label: "所有任务", path: "/tasks", active: false },
     { icon: Calendar, label: "Calendar", path: "/calendar", active: false },
-    { icon: BarChart3, label: "Analytics", path: "/analytics", active: false },
-    { icon: CheckCircle, label: "Completed", path: "/completed", active: false },
+    { icon: BarChart3, label: "数据分析", path: "/analytics", active: false },
+    { icon: CheckCircle, label: "已完成", path: "/completed", active: false },
     { icon: Trash, label: "Trash", path: "/trash", active: false },
   ];
 
@@ -30,7 +30,7 @@ export const Sidebar = ({ onNewTask }: SidebarProps) => {
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input 
-            placeholder="Search tasks" 
+            placeholder="搜索任务" 
             className="pl-10 bg-muted/50"
           />
         </div>
@@ -39,7 +39,7 @@ export const Sidebar = ({ onNewTask }: SidebarProps) => {
           onClick={onNewTask}
           className="w-full bg-green-500 hover:bg-green-600 text-white font-medium"
         >
-          New Task
+          新建任务
         </Button>
       </div>
 

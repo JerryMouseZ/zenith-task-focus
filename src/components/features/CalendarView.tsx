@@ -12,11 +12,11 @@ interface CalendarViewProps {
 type ViewMode = "day" | "week" | "month";
 
 export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>("week");
+  const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [currentDate, setCurrentDate] = useState(new Date());
   const { tasks, isLoading } = useTasks();
 
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const hours = Array.from({ length: 14 }, (_, i) => i + 8);
 
   // 只显示有截止时间的任务
   const scheduledTasks = tasks.filter(task => task.dueDate && task.status !== TaskStatus.COMPLETED);
@@ -35,7 +35,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
       </div>
       <div>
         <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
-          {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          {`${currentDate.getMonth() + 1}月${currentDate.getDate()}日（${'日一二三四五六'[currentDate.getDay()]}）`}
         </div>
         {hours.map((hour) => (
           <div key={hour} className="h-16 border-b border-border relative hover:bg-muted/20 cursor-pointer">
@@ -80,7 +80,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
           <div key={dayIndex}>
             <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
               <div className="text-center">
-                <div>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                <div>{"日一二三四五六"[day.getDay()]}</div>
                 <div className="text-lg">{day.getDate()}</div>
               </div>
             </div>
@@ -124,7 +124,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
 
     return (
       <div className="grid grid-cols-7 gap-0 border rounded-lg overflow-hidden">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        {['日', '一', '二', '三', '四', '五', '六'].map(day => (
           <div key={day} className="h-12 border-b border-border bg-muted/30 flex items-center justify-center text-sm font-medium">
             {day}
           </div>
@@ -159,7 +159,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
                 })}
               {scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length > 3 && (
                 <div className="text-xs text-muted-foreground">
-                  +{scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length - 3} more
+                  +{scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length - 3} 更多
                 </div>
               )}
             </div>
@@ -181,7 +181,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-semibold">Calendar</h1>
+          <h1 className="text-2xl font-semibold">日历</h1>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setViewMode("day")} 
                     className={viewMode === "day" ? "bg-green-50 text-green-700" : ""}>
@@ -216,22 +216,19 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-        <div className="flex items-center gap-2 text-blue-800">
-          <div className="w-3 h-3 bg-orange-500 rounded"></div>
-          <span className="text-sm font-medium">Due Date Tasks</span>
-          <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
-          <span className="text-sm font-medium">Overdue Tasks</span>
-        </div>
-        <p className="text-sm text-blue-700 mt-1">
-          Calendar shows tasks based on their due dates. Orange indicates upcoming deadlines, red indicates overdue tasks.
-        </p>
-      </div>
-
-      <Card className="p-4">
-        {viewMode === "day" && renderDayView()}
-        {viewMode === "week" && renderWeekView()}
-        {viewMode === "month" && renderMonthView()}
-      </Card>
+  <div className="flex items-center gap-2 text-blue-800">
+    <div className="w-3 h-3 bg-orange-500 rounded"></div>
+    <span className="text-sm font-medium">到期任务</span>
+    <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
+    <span className="text-sm font-medium">逾期任务</span>
+  </div>
+  <p className="text-sm text-blue-700 mt-1">日历根据任务截止日期显示任务。橙色表示即将到期，红色表示已逾期任务。</p>
+</div>
+<Card className="p-4">
+  {viewMode === "day" && renderDayView()}
+  {viewMode === "week" && renderWeekView()}
+  {viewMode === "month" && renderMonthView()}
+</Card>
     </div>
   );
 };

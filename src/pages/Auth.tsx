@@ -35,7 +35,7 @@ const Auth = () => {
         if (!fullName.trim()) {
           toast({
             title: "Error",
-            description: "Please enter your full name",
+            description: "请输入你的姓名",
             variant: "destructive",
           });
           setLoading(false);
@@ -52,14 +52,14 @@ const Auth = () => {
         });
       } else if (!isLogin) {
         toast({
-          title: "Success!",
-          description: "Please check your email to confirm your account",
+          title: "成功！",
+          description: "请检查你的邮箱以确认账户",
         });
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "An unexpected error occurred",
+        description: error.message || "发生了意外错误",
         variant: "destructive",
       });
     } finally {
@@ -74,45 +74,45 @@ const Auth = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground">ZenithTask</h1>
             <p className="text-muted-foreground mt-2">
-              {isLogin ? 'Sign in to your account' : 'Create your account'}
+              {isLogin ? '登录到你的账户' : '创建你的账户'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">姓名</Label>
                 <Input
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
+                  placeholder="请输入你的姓名"
                   required={!isLogin}
                 />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">邮箱</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="请输入你的邮箱"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">密码</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="请输入你的密码"
                 required
               />
             </div>
@@ -122,7 +122,7 @@ const Auth = () => {
               className="w-full bg-green-500 hover:bg-green-600"
               disabled={loading}
             >
-              {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
+              {loading ? '处理中...' : (isLogin ? '登录' : '注册')}
             </Button>
           </form>
 
@@ -133,8 +133,8 @@ const Auth = () => {
               className="text-green-600 hover:text-green-700 font-medium"
             >
               {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
+                ? "还没有账户？注册" 
+                : "已经有账户？登录"
               }
             </button>
           </div>
