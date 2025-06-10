@@ -119,14 +119,6 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">所有任务</h1>
-        <Button className="bg-green-500 hover:bg-green-600">
-          <Plus className="w-4 h-4 mr-2" />
-          新建任务
-        </Button>
-      </div>
-
       {/* Filters */}
       <Card className="p-4">
         <div className="flex items-center gap-4">

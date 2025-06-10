@@ -198,7 +198,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -208,11 +208,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
           <Button variant="outline" size="sm">
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <Button size="sm" className="ml-4 bg-green-500 hover:bg-green-600">
-            <Plus className="w-4 h-4 mr-2" />
-            New Task
-          </Button>
-        </div>
+        </div> */}
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
