@@ -18,11 +18,11 @@ interface TaskDetailModalProps {
   onClose: () => void;
 }
 
-export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps) => {
+export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailModalProps & { parentId?: string }) => {
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [newTag, setNewTag] = useState("");
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [showSubtaskModal, setShowSubtaskModal] = useState(false);
   const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting, useChildTasks } = useTasks();
 
   // 获取子任务
@@ -43,13 +43,14 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
           tags: [],
           subtasks: [],
           isFixedTime: false,
+          parentId: parentId || undefined,
         });
         setIsEditing(true);
       }
     } else {
       setIsEditing(false);
     }
-  }, [task, isOpen]);
+  }, [task, isOpen, parentId]);
 
   const handleSave = async () => {
     if (!editedTask.title?.trim()) {
@@ -109,29 +110,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
     });
   };
 
-  const handleAddSubtask = async () => {
-    if (newSubtaskTitle.trim() && task) {
-      try {
-        // 创建子任务（使用父任务ID）
-        await createTask({
-          title: newSubtaskTitle.trim(),
-          parentId: task.id,
-          priority: TaskPriority.MEDIUM,
-          status: TaskStatus.TODO,
-          tags: [],
-          subtasks: [],
-          isFixedTime: false,
-        } as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
-        setNewSubtaskTitle("");
-        // 重新获取子任务
-        refetchChildTasks();
-        toast.success('子任务创建成功');
-      } catch (error) {
-        console.error('Error creating subtask:', error);
-        toast.error('创建子任务失败');
-      }
-    }
-  };
+  // 子任务添加弹窗已替代原有逻辑，无需此函数
 
   const priorityColors = {
     [TaskPriority.LOW]: "bg-green-100 text-green-800",
@@ -406,16 +385,22 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
                 )}
               </div>
               <div className="flex gap-2">
-                <Input
-                  value={newSubtaskTitle}
-                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  placeholder="添加子任务..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddSubtask()}
-                />
-                <Button onClick={handleAddSubtask} size="sm" disabled={!newSubtaskTitle.trim()}>
-                  <Plus className="w-4 h-4" />
+                <Button onClick={() => setShowSubtaskModal(true)} size="sm">
+                  <Plus className="w-4 h-4 mr-1" /> 添加子任务
                 </Button>
               </div>
+              {/* 子任务弹窗 */}
+              {showSubtaskModal && (
+                <TaskDetailModal
+                  task={null}
+                  isOpen={showSubtaskModal}
+                  onClose={() => {
+                    setShowSubtaskModal(false);
+                    refetchChildTasks();
+                  }}
+                  parentId={task.id}
+                />
+              )}
             </div>
           )}
 
