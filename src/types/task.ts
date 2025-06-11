@@ -18,6 +18,8 @@ export interface Task {
   projectId?: string;
   parentId?: string; // 新增父任务ID
   completed: boolean;
+  recurrence: string; // 'none', 'daily', 'weekly', 'monthly'
+  recurrence_end_date?: Date;
 }
 
 export interface Subtask {

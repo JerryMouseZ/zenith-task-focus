@@ -88,6 +88,8 @@ export const taskService = {
       project_id: task.projectId || null,
       parent_id: task.parentId || null,
       completed: task.completed === undefined ? false : task.completed,
+      recurrence: task.recurrence || 'none',
+      recurrence_end_date: task.recurrence_end_date?.toISOString() || null,
     };
 
     // 如果有开始时间且不是固定时间，调整其他任务时间
@@ -131,6 +133,8 @@ export const taskService = {
     if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
     if (updates.parentId !== undefined) updateData.parent_id = updates.parentId;
     if (updates.completed !== undefined) updateData.completed = updates.completed;
+    if (updates.recurrence !== undefined) updateData.recurrence = updates.recurrence;
+    if (updates.recurrence_end_date !== undefined) updateData.recurrence_end_date = updates.recurrence_end_date?.toISOString() || null;
 
     updateData.updated_at = new Date().toISOString();
 
@@ -246,6 +250,8 @@ function transformDatabaseTaskToTask(dbTask: any): Task {
     parentId: dbTask.parent_id,
     completed: dbTask.completed ?? false,
     subtasks: dbTask.subtasks?.map(transformDatabaseSubtaskToSubtask) || [],
+    recurrence: dbTask.recurrence,
+    recurrence_end_date: dbTask.recurrence_end_date ? new Date(dbTask.recurrence_end_date) : undefined,
   };
 }
 

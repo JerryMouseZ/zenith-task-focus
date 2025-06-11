@@ -52,6 +52,8 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
           subtasks: [],
           isFixedTime: false,
           parentId: parentId || undefined,
+          recurrence: 'none',
+          recurrence_end_date: undefined,
         });
         setIsEditing(true);
       }
@@ -340,6 +342,44 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
               <div className="flex items-center gap-2 text-gray-600">
                 <Clock className="w-4 h-4" />
                 {editedTask.estimatedTime ? `${editedTask.estimatedTime} 分钟` : "未预估"}
+              </div>
+            )}
+          </div>
+
+          {/* Recurrence Settings */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="recurrence" className="text-sm font-medium text-gray-700 mb-2 block">
+                循环设置
+              </label>
+              <Select
+                value={editedTask.recurrence || 'none'}
+                onValueChange={(value) => setEditedTask({ ...editedTask, recurrence: value })}
+                disabled={!isEditing}
+              >
+                <SelectTrigger id="recurrence">
+                  <SelectValue placeholder="选择循环频率" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">不循环</SelectItem>
+                  <SelectItem value="daily">每天</SelectItem>
+                  <SelectItem value="weekly">每周</SelectItem>
+                  <SelectItem value="monthly">每月</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {editedTask.recurrence && editedTask.recurrence !== 'none' && (
+              <div>
+                <label htmlFor="recurrence_end_date" className="text-sm font-medium text-gray-700 mb-2 block">
+                  循环结束日期
+                </label>
+                <Input
+                  id="recurrence_end_date"
+                  type="date"
+                  value={editedTask.recurrence_end_date ? new Date(editedTask.recurrence_end_date).toISOString().split('T')[0] : ''}
+                  onChange={(e) => setEditedTask({ ...editedTask, recurrence_end_date: e.target.value ? new Date(e.target.value) : undefined })}
+                  disabled={!isEditing}
+                />
               </div>
             )}
           </div>
