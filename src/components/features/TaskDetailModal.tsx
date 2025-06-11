@@ -105,20 +105,27 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
     });
   };
 
-  const handleAddSubtask = () => {
+  const handleAddSubtask = async () => {
     if (newSubtaskTitle.trim() && task) {
-      // 创建子任务（使用父任务ID）
-      createTask({
-        title: newSubtaskTitle.trim(),
-        parentId: task.id,
-        priority: TaskPriority.MEDIUM,
-        status: TaskStatus.TODO,
-        tags: [],
-        subtasks: [],
-        isFixedTime: false,
-      } as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
-      setNewSubtaskTitle("");
-      refetchChildTasks();
+      try {
+        // 创建子任务（使用父任务ID）
+        await createTask({
+          title: newSubtaskTitle.trim(),
+          parentId: task.id,
+          priority: TaskPriority.MEDIUM,
+          status: TaskStatus.TODO,
+          tags: [],
+          subtasks: [],
+          isFixedTime: false,
+        } as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
+        setNewSubtaskTitle("");
+        // 重新获取子任务
+        refetchChildTasks();
+        toast.success('子任务创建成功');
+      } catch (error) {
+        console.error('Error creating subtask:', error);
+        toast.error('创建子任务失败');
+      }
     }
   };
 
@@ -340,7 +347,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
               标签
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {editedTask.tags?.map((tag) => (
+              {(editedTask.tags || []).map((tag) => (
                 <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                   <Tag className="w-3 h-3" />
                   {tag}
@@ -352,6 +359,9 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
                   )}
                 </Badge>
               ))}
+              {(!editedTask.tags || editedTask.tags.length === 0) && !isEditing && (
+                <span className="text-sm text-gray-500">暂无标签</span>
+              )}
             </div>
             {isEditing && (
               <div className="flex gap-2">
@@ -378,12 +388,18 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
                 {childTasks.map((childTask) => (
                   <div key={childTask.id} className="flex items-center gap-2 p-2 border rounded">
                     <Circle className="w-4 h-4" />
-                    <span>{childTask.title}</span>
+                    <span className="flex-1">{childTask.title}</span>
                     <Badge variant="outline" className="text-xs">
-                      {childTask.status}
+                      {childTask.status === TaskStatus.TODO && "待办"}
+                      {childTask.status === TaskStatus.IN_PROGRESS && "进行中"}
+                      {childTask.status === TaskStatus.COMPLETED && "已完成"}
+                      {childTask.status === TaskStatus.OVERDUE && "已逾期"}
                     </Badge>
                   </div>
                 ))}
+                {childTasks.length === 0 && (
+                  <div className="text-sm text-gray-500 p-2">暂无子任务</div>
+                )}
               </div>
               <div className="flex gap-2">
                 <Input
@@ -392,7 +408,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
                   placeholder="添加子任务..."
                   onKeyPress={(e) => e.key === 'Enter' && handleAddSubtask()}
                 />
-                <Button onClick={handleAddSubtask} size="sm">
+                <Button onClick={handleAddSubtask} size="sm" disabled={!newSubtaskTitle.trim()}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>

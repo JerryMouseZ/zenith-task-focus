@@ -27,8 +27,10 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   const allTags = Array.from(new Set(tasks.flatMap(task => task.tags)));
 
   const filteredTasks = tasks.filter(task => {
+    // Enhanced search to include tag searching
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description?.toLowerCase().includes(searchTerm.toLowerCase());
+                         task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
     const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => task.tags.includes(tag));
@@ -125,7 +127,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="搜索任务..."
+              placeholder="搜索任务或标签..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -172,15 +174,21 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
             <DropdownMenuContent className="w-56">
               <DropdownMenuLabel>按标签筛选</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {allTags.map((tag) => (
-                <DropdownMenuCheckboxItem
-                  key={tag}
-                  checked={selectedTags.includes(tag)}
-                  onCheckedChange={() => handleTagToggle(tag)}
-                >
-                  {tag}
-                </DropdownMenuCheckboxItem>
-              ))}
+              {allTags.length > 0 ? (
+                allTags.map((tag) => (
+                  <DropdownMenuCheckboxItem
+                    key={tag}
+                    checked={selectedTags.includes(tag)}
+                    onCheckedChange={() => handleTagToggle(tag)}
+                  >
+                    {tag}
+                  </DropdownMenuCheckboxItem>
+                ))
+              ) : (
+                <div className="px-2 py-1 text-sm text-muted-foreground">
+                  暂无标签
+                </div>
+              )}
               {selectedTags.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
@@ -269,7 +277,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                     </div>
                   )}
                   
-                  {task.tags.length > 0 && (
+                  {task.tags && task.tags.length > 0 && (
                     <div className="flex items-center gap-1">
                       <Tag className="w-4 h-4" />
                       <div className="flex gap-1">
