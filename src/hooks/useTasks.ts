@@ -55,6 +55,24 @@ export const useTasks = () => {
     },
   });
 
+  // 获取子任务
+  const useChildTasks = (parentId: string) => {
+    return useQuery({
+      queryKey: ['child-tasks', parentId],
+      queryFn: () => taskService.getChildTasks(parentId),
+      enabled: !!parentId,
+    });
+  };
+
+  // 按标签搜索任务
+  const useTasksByTags = (tags: string[]) => {
+    return useQuery({
+      queryKey: ['tasks-by-tags', tags],
+      queryFn: () => taskService.searchTasksByTags(tags),
+      enabled: tags.length > 0,
+    });
+  };
+
   return {
     tasks,
     isLoading,
@@ -66,5 +84,7 @@ export const useTasks = () => {
     isCreating: createTaskMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
+    useChildTasks,
+    useTasksByTags,
   };
 };

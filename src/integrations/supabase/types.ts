@@ -78,6 +78,7 @@ export type Database = {
           estimated_time: number | null
           id: string
           is_fixed_time: boolean
+          parent_id: string | null
           priority: string
           project_id: string | null
           start_time: string | null
@@ -96,6 +97,7 @@ export type Database = {
           estimated_time?: number | null
           id?: string
           is_fixed_time?: boolean
+          parent_id?: string | null
           priority?: string
           project_id?: string | null
           start_time?: string | null
@@ -114,6 +116,7 @@ export type Database = {
           estimated_time?: number | null
           id?: string
           is_fixed_time?: boolean
+          parent_id?: string | null
           priority?: string
           project_id?: string | null
           start_time?: string | null
@@ -123,7 +126,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -145,6 +156,46 @@ export type Database = {
           p_duration_minutes: number
         }
         Returns: undefined
+      }
+      get_child_tasks: {
+        Args: { parent_task_id: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          status: string
+          priority: string
+          due_date: string
+          start_time: string
+          end_time: string
+          is_fixed_time: boolean
+          estimated_time: number
+          actual_time: number
+          tags: string[]
+          parent_id: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      search_tasks_by_tags: {
+        Args: { search_tags: string[] }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          status: string
+          priority: string
+          due_date: string
+          start_time: string
+          end_time: string
+          is_fixed_time: boolean
+          estimated_time: number
+          actual_time: number
+          tags: string[]
+          parent_id: string
+          created_at: string
+          updated_at: string
+        }[]
       }
     }
     Enums: {

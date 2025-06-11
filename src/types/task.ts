@@ -1,3 +1,4 @@
+
 export interface Task {
   id: string;
   title: string;
@@ -15,6 +16,7 @@ export interface Task {
   actualTime?: number; // in minutes
   subtasks: Subtask[];
   projectId?: string;
+  parentId?: string; // 新增父任务ID
 }
 
 export interface Subtask {

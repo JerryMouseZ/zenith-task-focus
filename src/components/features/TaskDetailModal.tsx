@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Clock, Tag, CheckCircle, Circle, Trash, Lock } from "lucide-react";
+import { Calendar, Clock, Tag, CheckCircle, Circle, Trash, Lock, Plus, X } from "lucide-react";
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
 import { toast } from "sonner";
@@ -21,7 +21,12 @@ interface TaskDetailModalProps {
 export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps) => {
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting } = useTasks();
+  const [newTag, setNewTag] = useState("");
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting, useChildTasks } = useTasks();
+
+  // 获取子任务
+  const { data: childTasks = [], refetch: refetchChildTasks } = useChildTasks(task?.id || "");
 
   useEffect(() => {
     if (task) {
@@ -80,6 +85,40 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
       setIsEditing(false);
     } else {
       onClose();
+    }
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !editedTask.tags?.includes(newTag.trim())) {
+      setEditedTask({
+        ...editedTask,
+        tags: [...(editedTask.tags || []), newTag.trim()]
+      });
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setEditedTask({
+      ...editedTask,
+      tags: editedTask.tags?.filter(tag => tag !== tagToRemove) || []
+    });
+  };
+
+  const handleAddSubtask = () => {
+    if (newSubtaskTitle.trim() && task) {
+      // 创建子任务（使用父任务ID）
+      createTask({
+        title: newSubtaskTitle.trim(),
+        parentId: task.id,
+        priority: TaskPriority.MEDIUM,
+        status: TaskStatus.TODO,
+        tags: [],
+        subtasks: [],
+        isFixedTime: false,
+      } as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
+      setNewSubtaskTitle("");
+      refetchChildTasks();
     }
   };
 
@@ -292,6 +331,71 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
               </div>
             )}
           </div>
+
+          {/* Tags */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              标签
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {editedTask.tags?.map((tag) => (
+                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                  <Tag className="w-3 h-3" />
+                  {tag}
+                  {isEditing && (
+                    <X 
+                      className="w-3 h-3 cursor-pointer hover:text-red-500" 
+                      onClick={() => handleRemoveTag(tag)}
+                    />
+                  )}
+                </Badge>
+              ))}
+            </div>
+            {isEditing && (
+              <div className="flex gap-2">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="添加标签..."
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                />
+                <Button onClick={handleAddTag} size="sm">
+                  添加
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Child Tasks */}
+          {task && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                子任务
+              </label>
+              <div className="space-y-2 mb-2">
+                {childTasks.map((childTask) => (
+                  <div key={childTask.id} className="flex items-center gap-2 p-2 border rounded">
+                    <Circle className="w-4 h-4" />
+                    <span>{childTask.title}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {childTask.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  placeholder="添加子任务..."
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddSubtask()}
+                />
+                <Button onClick={handleAddSubtask} size="sm">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t">

@@ -17,6 +17,7 @@ export interface DatabaseTask {
   actual_time: number | null;
   tags: string[] | null;
   project_id: string | null;
+  parent_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +46,26 @@ export const taskService = {
     return data?.map(transformDatabaseTaskToTask) || [];
   },
 
+  // 获取子任务
+  async getChildTasks(parentId: string): Promise<Task[]> {
+    const { data, error } = await supabase
+      .rpc('get_child_tasks', { parent_task_id: parentId });
+
+    if (error) throw error;
+
+    return data?.map(transformDatabaseTaskToTask) || [];
+  },
+
+  // 按标签搜索任务
+  async searchTasksByTags(tags: string[]): Promise<Task[]> {
+    const { data, error } = await supabase
+      .rpc('search_tasks_by_tags', { search_tags: tags });
+
+    if (error) throw error;
+
+    return data?.map(transformDatabaseTaskToTask) || [];
+  },
+
   // 创建任务
   async createTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -64,6 +85,7 @@ export const taskService = {
       actual_time: task.actualTime || null,
       tags: task.tags || [],
       project_id: task.projectId || null,
+      parent_id: task.parentId || null,
     };
 
     // 如果有开始时间且不是固定时间，调整其他任务时间
@@ -105,6 +127,7 @@ export const taskService = {
     if (updates.actualTime !== undefined) updateData.actual_time = updates.actualTime;
     if (updates.tags !== undefined) updateData.tags = updates.tags;
     if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
+    if (updates.parentId !== undefined) updateData.parent_id = updates.parentId;
 
     updateData.updated_at = new Date().toISOString();
 
@@ -217,6 +240,7 @@ function transformDatabaseTaskToTask(dbTask: any): Task {
     estimatedTime: dbTask.estimated_time,
     actualTime: dbTask.actual_time,
     projectId: dbTask.project_id,
+    parentId: dbTask.parent_id,
     subtasks: dbTask.subtasks?.map(transformDatabaseSubtaskToSubtask) || [],
   };
 }
