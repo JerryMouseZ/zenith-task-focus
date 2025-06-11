@@ -21,7 +21,8 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
   // 只显示有截止时间且未完成的任务
   const scheduledTasks = tasks.filter(task => task.dueDate && !task.completed);
 
-  const renderDayView = () => (
+  function renderDayView() {
+    return (
     <div className="grid grid-cols-[80px_1fr] gap-0 border rounded-lg overflow-hidden">
       <div className="bg-muted/30">
         <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
@@ -57,9 +58,10 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         ))}
       </div>
     </div>
-  );
+    );
+  }
 
-  const renderWeekView = () => {
+  function renderWeekView() {
     const weekDays = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(currentDate);
       date.setDate(date.getDate() + i);
@@ -106,9 +108,9 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         ))}
       </div>
     );
-  };
+  }
 
-  const renderMonthView = () => {
+  function renderMonthView() {
     const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const startDate = new Date(monthStart);

@@ -2,12 +2,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut } from 'lucide-react'; // User icon was not used
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
@@ -40,18 +42,23 @@ export const UserMenu = () => {
             {getInitials(user.email || 'U')}
           </AvatarFallback>
         </Avatar>
-        <span className="text-sm text-muted-foreground hidden sm:block">
-          {user.email}
-        </span>
+        {!isMobile && user.email && (
+          <span className="text-sm text-muted-foreground">
+            {user.email}
+          </span>
+        )}
       </div>
       <Button
         variant="ghost"
         size="sm"
         onClick={handleSignOut}
         className="text-muted-foreground hover:text-foreground"
+        aria-label="Sign Out"
       >
         <LogOut className="h-4 w-4" />
-        <span className="hidden sm:inline ml-2">Sign Out</span>
+        {!isMobile && (
+          <span className="ml-2">Sign Out</span>
+        )}
       </Button>
     </div>
   );
