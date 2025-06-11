@@ -2,28 +2,83 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Clock, CheckCircle, Target, Zap } from "lucide-react";
+import { TrendingUp, Clock, CheckCircle, Target } from "lucide-react"; // Removed Zap and TrendingDown
+import { useTasks } from "@/hooks/useTasks"; // Added useTasks import
 
 export const AnalyticsView = () => {
-  // Mock data for analytics
-  const stats = {
-    tasksCompleted: 24,
-    tasksTotal: 32,
-    completionRate: 75,
-    avgCompletionTime: 45,
-    energyLevel: 78,
-    streakDays: 7,
+  const { tasks, isLoading, error } = useTasks();
+
+  if (isLoading) {
+    return <p>Loading analytics...</p>;
+  }
+
+  if (error) {
+    return <p>Error loading data.</p>;
+  }
+
+  const completedTasks = tasks.filter(task => task.status === 'completed');
+  const tasksCompleted = completedTasks.length;
+  const tasksTotal = tasks.length;
+  const completionRate = tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0;
+
+  const avgCompletionTime = completedTasks.length > 0
+    ? completedTasks.reduce((sum, task) => sum + (task.actualTime || 0), 0) / completedTasks.length
+    : 0;
+
+  // --- Start of Weekly Data Calculation ---
+  const getDayOfWeek = (date: Date): number => {
+    // Sunday - 0, Monday - 1, ..., Saturday - 6
+    // Adjust to Mon - 0, Sun - 6 for easier array indexing if needed
+    const day = date.getDay();
+    return day === 0 ? 6 : day - 1; // Mon:0, Tue:1, ..., Sun:6
   };
 
-  const weeklyData = [
-    { day: "Mon", completed: 4, planned: 5 },
-    { day: "Tue", completed: 3, planned: 4 },
-    { day: "Wed", completed: 5, planned: 6 },
-    { day: "Thu", completed: 2, planned: 3 },
-    { day: "Fri", completed: 6, planned: 7 },
-    { day: "Sat", completed: 2, planned: 3 },
-    { day: "Sun", completed: 2, planned: 4 },
-  ];
+  const getStartOfWeek = (date: Date): Date => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    return new Date(d.setDate(diff));
+  };
+
+  const today = new Date();
+  const startOfWeek = getStartOfWeek(today);
+  startOfWeek.setHours(0, 0, 0, 0); // Normalize to start of the day
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999); // Normalize to end of the day
+
+  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const processedWeeklyData = dayLabels.map(label => ({
+    day: label,
+    planned: 0,
+    completed: 0,
+  }));
+
+  tasks.forEach(task => {
+    const taskDueDate = task.dueDate ? new Date(task.dueDate) : null;
+    const taskUpdatedAt = task.updatedAt ? new Date(task.updatedAt) : null;
+
+    // Check for planned tasks
+    if (taskDueDate && taskDueDate >= startOfWeek && taskDueDate <= endOfWeek) {
+      const dayIndex = getDayOfWeek(taskDueDate);
+      if (processedWeeklyData[dayIndex]) {
+        processedWeeklyData[dayIndex].planned++;
+      }
+    }
+
+    // Check for completed tasks
+    if (task.status === 'completed' && taskUpdatedAt && taskUpdatedAt >= startOfWeek && taskUpdatedAt <= endOfWeek) {
+      const dayIndex = getDayOfWeek(taskUpdatedAt);
+      if (processedWeeklyData[dayIndex]) {
+        processedWeeklyData[dayIndex].completed++;
+      }
+    }
+  });
+  // --- End of Weekly Data Calculation ---
+
+  // Use processedWeeklyData instead of mock weeklyData
+  const weeklyData = processedWeeklyData;
 
   return (
     <div className="space-y-6">
@@ -32,18 +87,18 @@ export const AnalyticsView = () => {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Adjusted grid columns */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.tasksCompleted}/{stats.tasksTotal}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold">{tasksCompleted}/{tasksTotal}</div>
+            {/* <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline w-3 h-3 mr-1" />
               +12% from last week
-            </p>
+            </p> */}
           </CardContent>
         </Card>
 
@@ -53,8 +108,8 @@ export const AnalyticsView = () => {
             <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completionRate}%</div>
-            <Progress value={stats.completionRate} className="mt-2" />
+            <div className="text-2xl font-bold">{completionRate.toFixed(0)}%</div>
+            <Progress value={completionRate} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -64,22 +119,11 @@ export const AnalyticsView = () => {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.avgCompletionTime}min</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold">{avgCompletionTime.toFixed(0)}min</div>
+            {/* <p className="text-xs text-muted-foreground">
               <TrendingDown className="inline w-3 h-3 mr-1" />
               -5min from last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Energy Level</CardTitle>
-            <Zap className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.energyLevel}%</div>
-            <Progress value={stats.energyLevel} className="mt-2" />
+            </p> */}
           </CardContent>
         </Card>
       </div>
@@ -101,15 +145,18 @@ export const AnalyticsView = () => {
                     <span>Planned: {day.planned}</span>
                   </div>
                   <div className="relative">
-                    <Progress value={(day.planned / 7) * 100} className="h-2" />
+                    {/* Max value for progress should be the max tasks on any day or a fixed sensible number */}
+                    {/* For now, let's assume max planned/completed on a day won't exceed something like 10 for visualization */}
+                    {/* Or, better, calculate progress as percentage of planned for that day */}
+                    <Progress value={day.planned > 0 ? (day.planned / (day.planned + 5)) * 100 : 0} className="h-2" />
                     <Progress 
-                      value={(day.completed / 7) * 100} 
+                      value={day.planned > 0 ? (day.completed / day.planned) * 100 : (day.completed > 0 ? 100 : 0)}
                       className="h-2 absolute top-0 bg-green-500" 
                     />
                   </div>
                 </div>
-                <Badge variant={day.completed >= day.planned ? "default" : "secondary"}>
-                  {Math.round((day.completed / day.planned) * 100)}%
+                <Badge variant={day.completed >= day.planned && day.planned > 0 ? "default" : "secondary"}>
+                  {day.planned > 0 ? `${Math.round((day.completed / day.planned) * 100)}%` : (day.completed > 0 ? '100%' : '0%')}
                 </Badge>
               </div>
             ))}
@@ -117,71 +164,7 @@ export const AnalyticsView = () => {
         </CardContent>
       </Card>
 
-      {/* Energy Tracking */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Energy Trends</CardTitle>
-            <CardDescription>Your energy levels throughout the week</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, index) => {
-                const energy = Math.floor(Math.random() * 40) + 60; // Mock data
-                return (
-                  <div key={day} className="flex items-center gap-4">
-                    <div className="w-12 text-sm font-medium">{day}</div>
-                    <div className="flex-1">
-                      <Progress value={energy} className="h-3" />
-                    </div>
-                    <div className="w-12 text-sm text-right">{energy}%</div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Productivity Insights</CardTitle>
-            <CardDescription>AI-powered recommendations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">Great Progress!</p>
-                    <p className="text-sm text-green-700">You're completing tasks 15% faster than last week.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Clock className="w-4 h-4 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-800">Peak Hours</p>
-                    <p className="text-sm text-blue-700">You're most productive between 10-12 AM.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Zap className="w-4 h-4 text-orange-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-orange-800">Energy Tip</p>
-                    <p className="text-sm text-orange-700">Consider scheduling lighter tasks after 3 PM.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Productivity Insights section removed */}
     </div>
   );
 };
