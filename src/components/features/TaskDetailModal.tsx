@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { formatForDateTimeLocal } from '@/utils/timezoneUtils';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -282,7 +283,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
               {isEditing ? (
                 <Input
                   type="datetime-local"
-                  value={editedTask.dueDate ? editedTask.dueDate.toISOString().slice(0, 16) : ""}
+                  value={editedTask.dueDate ? formatForDateTimeLocal(editedTask.dueDate) : ""}
                   onChange={(e) => setEditedTask({ 
                     ...editedTask, 
                     dueDate: e.target.value ? new Date(e.target.value) : undefined 
@@ -303,7 +304,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
               {isEditing ? (
                 <Input
                   type="datetime-local"
-                  value={editedTask.startTime ? editedTask.startTime.toISOString().slice(0, 16) : ""}
+                  value={editedTask.startTime ? formatForDateTimeLocal(editedTask.startTime) : ""}
                   onChange={(e) => setEditedTask({ 
                     ...editedTask, 
                     startTime: e.target.value ? new Date(e.target.value) : undefined 

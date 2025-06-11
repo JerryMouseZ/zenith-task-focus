@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority, Subtask } from "@/types/task";
+import { convertFromUTC, convertToUTC } from '@/utils/timezoneUtils';
 
 export interface DatabaseTask {
   id: string;
@@ -71,6 +72,17 @@ export const taskService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // Convert dates to UTC before saving
+    if (task.dueDate) {
+      task.dueDate = convertToUTC(task.dueDate);
+    }
+    if (task.startTime) {
+      task.startTime = convertToUTC(task.startTime);
+    }
+    if (task.endTime) {
+      task.endTime = convertToUTC(task.endTime);
+    }
+
     const taskData = {
       user_id: user.id,
       title: task.title,
@@ -119,9 +131,9 @@ export const taskService = {
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.priority !== undefined) updateData.priority = updates.priority;
-    if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate?.toISOString() || null;
-    if (updates.startTime !== undefined) updateData.start_time = updates.startTime?.toISOString() || null;
-    if (updates.endTime !== undefined) updateData.end_time = updates.endTime?.toISOString() || null;
+    if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate ? convertToUTC(updates.dueDate).toISOString() : null;
+    if (updates.startTime !== undefined) updateData.start_time = updates.startTime ? convertToUTC(updates.startTime).toISOString() : null;
+    if (updates.endTime !== undefined) updateData.end_time = updates.endTime ? convertToUTC(updates.endTime).toISOString() : null;
     if (updates.isFixedTime !== undefined) updateData.is_fixed_time = updates.isFixedTime;
     if (updates.estimatedTime !== undefined) updateData.estimated_time = updates.estimatedTime;
     if (updates.actualTime !== undefined) updateData.actual_time = updates.actualTime;
@@ -224,33 +236,60 @@ export const taskService = {
 
 // 转换数据库任务到前端任务类型
 function transformDatabaseTaskToTask(dbTask: any): Task {
-  return {
+  const task: Task = {
     id: dbTask.id,
     title: dbTask.title,
     description: dbTask.description,
     status: dbTask.status as TaskStatus,
     priority: dbTask.priority as TaskPriority,
-    dueDate: dbTask.due_date ? new Date(dbTask.due_date) : undefined,
-    startTime: dbTask.start_time ? new Date(dbTask.start_time) : undefined,
-    endTime: dbTask.end_time ? new Date(dbTask.end_time) : undefined,
     isFixedTime: dbTask.is_fixed_time,
-    createdAt: new Date(dbTask.created_at),
-    updatedAt: new Date(dbTask.updated_at),
     tags: dbTask.tags || [],
     estimatedTime: dbTask.estimated_time,
     actualTime: dbTask.actual_time,
     projectId: dbTask.project_id,
     parentId: dbTask.parent_id,
     subtasks: dbTask.subtasks?.map(transformDatabaseSubtaskToSubtask) || [],
+    createdAt: new Date(dbTask.created_at), // Placeholder, will be overwritten
+    updatedAt: new Date(dbTask.updated_at), // Placeholder, will be overwritten
   };
+
+  if (dbTask.due_date) {
+    const utcDate = new Date(dbTask.due_date);
+    task.dueDate = convertFromUTC(utcDate);
+  }
+  if (dbTask.start_time) {
+    const utcDate = new Date(dbTask.start_time);
+    task.startTime = convertFromUTC(utcDate);
+  }
+  if (dbTask.end_time) {
+    const utcDate = new Date(dbTask.end_time);
+    task.endTime = convertFromUTC(utcDate);
+  }
+  if (dbTask.created_at) {
+    const utcDate = new Date(dbTask.created_at);
+    task.createdAt = convertFromUTC(utcDate);
+  }
+  if (dbTask.updated_at) {
+    const utcDate = new Date(dbTask.updated_at);
+    task.updatedAt = convertFromUTC(utcDate);
+  }
+
+  return task;
 }
 
 // 转换数据库子任务到前端子任务类型
 function transformDatabaseSubtaskToSubtask(dbSubtask: DatabaseSubtask): Subtask {
-  return {
+  const subtask: Subtask = {
     id: dbSubtask.id,
     title: dbSubtask.title,
     completed: dbSubtask.completed,
-    createdAt: new Date(dbSubtask.created_at),
+    createdAt: new Date(dbSubtask.created_at), // Placeholder, will be overwritten
   };
+
+  if (dbSubtask.created_at) {
+    const utcDate = new Date(dbSubtask.created_at);
+    subtask.createdAt = convertFromUTC(utcDate);
+  }
+
+  return subtask;
 }
