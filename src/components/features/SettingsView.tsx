@@ -1,5 +1,7 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { profileService, Profile } from '@/services/profileService';
+import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Brain, Palette, Bell, Shield } from "lucide-react";
+import { Save, Brain, Palette, Bell, Shield, UserCircle } from "lucide-react"; // Added UserCircle
 
 export const SettingsView = () => {
   const [baseUrl, setBaseUrl] = useState("");
@@ -17,28 +19,147 @@ export const SettingsView = () => {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
-  const handleSave = () => {
-    // Handle save settings
-    console.log("Settings saved");
+  // Profile specific state
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [selectedTimeZone, setSelectedTimeZone] = useState<string>('');
+  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(true); // Renamed to avoid conflict
+  const { toast } = useToast();
+
+  // Generate time zone options using Intl API
+  const timeZoneOptions = React.useMemo(() => {
+    try {
+      return Intl.supportedValuesOf('timeZone').map(tz => ({ value: tz, label: tz }));
+    } catch (e) {
+      // Fallback for environments where Intl.supportedValuesOf is not available (e.g. older Node for SSR)
+      console.warn("Intl.supportedValuesOf('timeZone') is not supported, using a fallback list.");
+      return [
+        { value: 'UTC', label: 'UTC' },
+        { value: 'America/New_York', label: 'America/New York' },
+        { value: 'America/Chicago', label: 'America/Chicago' },
+        { value: 'America/Denver', label: 'America/Denver' },
+        { value: 'America/Los_Angeles', label: 'America/Los Angeles' },
+        { value: 'Europe/London', label: 'Europe/London' },
+        { value: 'Europe/Berlin', label: 'Europe/Berlin' },
+        { value: 'Asia/Tokyo', label: 'Asia/Tokyo' },
+        { value: 'Asia/Shanghai', label: 'Asia/Shanghai' },
+        { value: 'Australia/Sydney', label: 'Australia/Sydney' },
+      ];
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setIsLoadingProfile(true);
+      try {
+        const profileData = await profileService.getProfile();
+        if (profileData) {
+          setProfile(profileData);
+          setSelectedTimeZone(profileData.timezone || '');
+        } else {
+          toast({ title: 'Profile Not Found', description: 'Could not load user profile.', variant: 'warning' });
+        }
+      } catch (error) {
+        toast({ title: 'Error', description: 'Failed to load profile data.', variant: 'destructive' });
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    fetchProfileData();
+  }, [toast]);
+
+  const handleSaveGeneralSettings = () => {
+    // Handle save for general settings (AI, Appearance etc.)
+    console.log("General settings saved:", { baseUrl, apiKey, selectedModel, notifications, darkMode });
+    toast({ title: 'General Settings Saved', description: 'AI, Appearance, and other settings have been saved.'});
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profile) {
+      toast({ title: 'Error', description: 'Profile not loaded.', variant: 'destructive' });
+      return;
+    }
+    setIsLoadingProfile(true);
+    try {
+      await profileService.updateProfile({ timezone: selectedTimeZone });
+      setProfile(prev => prev ? { ...prev, timezone: selectedTimeZone, updated_at: new Date() } : null);
+      toast({ title: 'Success', description: 'Profile updated successfully.' });
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
+      console.error("Error updating profile:", error);
+    } finally {
+      setIsLoadingProfile(false);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <Button onClick={handleSave} className="bg-green-500 hover:bg-green-600">
+        {/* This button could be made context-aware based on the active tab or removed if each tab has its own save */}
+        <Button onClick={handleSaveGeneralSettings} className="bg-green-500 hover:bg-green-600">
           <Save className="w-4 h-4 mr-2" />
-          Save Changes
+          Save General Settings
         </Button>
       </div>
 
-      <Tabs defaultValue="ai" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="profile" className="space-y-6"> {/* Changed default to profile */}
+        <TabsList className="grid w-full grid-cols-5"> {/* Adjusted grid columns for new tab */}
+          <TabsTrigger value="profile">Profile</TabsTrigger> {/* New Profile Tab */}
           <TabsTrigger value="ai">AI Settings</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="profile">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCircle className="w-5 h-5" />
+                User Profile
+              </CardTitle>
+              <CardDescription>
+                Manage your profile settings, including time zone.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input id="fullName" value={profile?.full_name || ''} disabled placeholder="Loading..." />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={profile?.email || ''} disabled placeholder="Loading..." />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="timezone-select">Time Zone</Label>
+                <Select
+                  value={selectedTimeZone}
+                  onValueChange={setSelectedTimeZone}
+                  disabled={isLoadingProfile}
+                >
+                  <SelectTrigger id="timezone-select">
+                    <SelectValue placeholder="Select your time zone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeZoneOptions.map(tz => (
+                      <SelectItem key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 <p className="text-sm text-muted-foreground">
+                  Select your local time zone for accurate scheduling and reminders.
+                </p>
+              </div>
+              <Button onClick={handleSaveProfile} disabled={isLoadingProfile}>
+                {isLoadingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="ai">
           <Card>
@@ -91,10 +212,11 @@ export const SettingsView = () => {
                   onChange={(e) => setApiKey(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Your API key is stored securely and encrypted
+                   Your API key is stored securely and encrypted.
                 </p>
               </div>
 
+               {/* Separator and AI Features remain as they were, no changes needed here for profile */}
               <Separator />
 
               <div className="space-y-4">
@@ -103,21 +225,21 @@ export const SettingsView = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Task Breakdown</p>
-                      <p className="text-sm text-muted-foreground">Let AI break down complex tasks</p>
+                       <p className="text-sm text-muted-foreground">Let AI break down complex tasks.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Smart Scheduling</p>
-                      <p className="text-sm text-muted-foreground">AI-powered schedule planning</p>
+                       <p className="text-sm text-muted-foreground">AI-powered schedule planning.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Energy Prediction</p>
-                      <p className="text-sm text-muted-foreground">Predict and track energy levels</p>
+                       <p className="text-sm text-muted-foreground">Predict and track energy levels.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
