@@ -26,37 +26,65 @@ export const SettingsView = () => {
   const [isSavingProfile, setIsSavingProfile] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // Generate time zone options using Intl API
+  // Generate time zone options with fallback for older environments
   const timeZoneOptions = React.useMemo(() => {
+    const userTimezone = getUserTimezone();
+    
+    // Try to use Intl.supportedValuesOf if available, otherwise use fallback list
+    let zones: { value: string; label: string }[] = [];
+    
     try {
-      const userTimezone = getUserTimezone();
-      const zones = Intl.supportedValuesOf('timeZone').map(tz => ({ 
-        value: tz, 
-        label: tz.replace(/_/g, ' ')
-      }));
-      
-      // Sort with user's current timezone first
-      return zones.sort((a, b) => {
-        if (a.value === userTimezone) return -1;
-        if (b.value === userTimezone) return 1;
-        return a.label.localeCompare(b.label);
-      });
+      // Check if supportedValuesOf is available
+      if ('supportedValuesOf' in Intl && typeof (Intl as any).supportedValuesOf === 'function') {
+        zones = (Intl as any).supportedValuesOf('timeZone').map((tz: string) => ({ 
+          value: tz, 
+          label: tz.replace(/_/g, ' ')
+        }));
+      } else {
+        throw new Error('supportedValuesOf not available');
+      }
     } catch (e) {
       // Fallback for environments where Intl.supportedValuesOf is not available
       console.warn("Intl.supportedValuesOf('timeZone') is not supported, using a fallback list.");
-      return [
+      zones = [
         { value: 'UTC', label: 'UTC' },
         { value: 'America/New_York', label: 'America/New York' },
         { value: 'America/Chicago', label: 'America/Chicago' },
         { value: 'America/Denver', label: 'America/Denver' },
         { value: 'America/Los_Angeles', label: 'America/Los Angeles' },
+        { value: 'America/Toronto', label: 'America/Toronto' },
+        { value: 'America/Vancouver', label: 'America/Vancouver' },
         { value: 'Europe/London', label: 'Europe/London' },
         { value: 'Europe/Berlin', label: 'Europe/Berlin' },
+        { value: 'Europe/Paris', label: 'Europe/Paris' },
+        { value: 'Europe/Rome', label: 'Europe/Rome' },
+        { value: 'Europe/Madrid', label: 'Europe/Madrid' },
+        { value: 'Europe/Amsterdam', label: 'Europe/Amsterdam' },
         { value: 'Asia/Tokyo', label: 'Asia/Tokyo' },
         { value: 'Asia/Shanghai', label: 'Asia/Shanghai' },
+        { value: 'Asia/Hong_Kong', label: 'Asia/Hong Kong' },
+        { value: 'Asia/Singapore', label: 'Asia/Singapore' },
+        { value: 'Asia/Seoul', label: 'Asia/Seoul' },
+        { value: 'Asia/Mumbai', label: 'Asia/Mumbai' },
+        { value: 'Asia/Dubai', label: 'Asia/Dubai' },
         { value: 'Australia/Sydney', label: 'Australia/Sydney' },
+        { value: 'Australia/Melbourne', label: 'Australia/Melbourne' },
+        { value: 'Australia/Perth', label: 'Australia/Perth' },
+        { value: 'Pacific/Auckland', label: 'Pacific/Auckland' },
+        { value: 'Africa/Cairo', label: 'Africa/Cairo' },
+        { value: 'Africa/Johannesburg', label: 'Africa/Johannesburg' },
+        { value: 'America/Sao_Paulo', label: 'America/Sao Paulo' },
+        { value: 'America/Mexico_City', label: 'America/Mexico City' },
+        { value: 'America/Argentina/Buenos_Aires', label: 'America/Argentina/Buenos Aires' },
       ];
     }
+    
+    // Sort with user's current timezone first
+    return zones.sort((a, b) => {
+      if (a.value === userTimezone) return -1;
+      if (b.value === userTimezone) return 1;
+      return a.label.localeCompare(b.label);
+    });
   }, []);
 
   useEffect(() => {
@@ -190,8 +218,8 @@ export const SettingsView = () => {
                   Select your local time zone for accurate scheduling and reminders.
                 </p>
               </div>
-              <Button onClick={handleSaveProfile} disabled={isLoadingProfile}>
-                {isLoadingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
+              <Button onClick={handleSaveProfile} disabled={isLoadingProfile || isSavingProfile}>
+                {isSavingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
               </Button>
             </CardContent>
           </Card>
