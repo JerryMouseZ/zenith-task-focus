@@ -28,6 +28,14 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
   // 获取子任务
   const { data: childTasks = [], refetch: refetchChildTasks } = useChildTasks(task?.id || "");
 
+  // 关键修复：监听子任务弹窗关闭后刷新子任务列表
+  useEffect(() => {
+    if (!showSubtaskModal && isOpen && task) {
+      refetchChildTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSubtaskModal, isOpen, task]);
+
   useEffect(() => {
     if (isOpen) {
       if (task) {
