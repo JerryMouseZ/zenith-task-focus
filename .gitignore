@@ -1,3 +1,22 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Vite
+.vite/
+dist
+dist-ssr
+
+# Supabase
+/supabase/.temp
+/supabase/functions/**/node_modules/
+
 # Logs
 logs
 *.log
@@ -7,20 +26,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# OS
+.DS_Store
+Thumbs.db
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Build results
+/dist
+/out
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Misc
+*.local
+*.tsbuildinfo
 .temp
