@@ -83,18 +83,18 @@ export const AnalyticsView = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Analytics & Reports</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Analytics & Reports</h1>
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Adjusted grid columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"> {/* Adjusted grid columns for sm screens */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6 pt-4 sm:pt-5">
+            <CardTitle className="text-xs sm:text-sm font-medium">Tasks Completed</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tasksCompleted}/{tasksTotal}</div>
+          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-5">
+            <div className="text-xl sm:text-2xl font-bold">{tasksCompleted}/{tasksTotal}</div>
             {/* <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline w-3 h-3 mr-1" />
               +12% from last week
@@ -103,23 +103,23 @@ export const AnalyticsView = () => {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6 pt-4 sm:pt-5">
+            <CardTitle className="text-xs sm:text-sm font-medium">Completion Rate</CardTitle>
             <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completionRate.toFixed(0)}%</div>
-            <Progress value={completionRate} className="mt-2" />
+          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-5">
+            <div className="text-xl sm:text-2xl font-bold">{completionRate.toFixed(0)}%</div>
+            <Progress value={completionRate} className="mt-1 sm:mt-2 h-1.5 sm:h-2" />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Time</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6 pt-4 sm:pt-5">
+            <CardTitle className="text-xs sm:text-sm font-medium">Avg. Time</CardTitle>
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgCompletionTime.toFixed(0)}min</div>
+          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-5">
+            <div className="text-xl sm:text-2xl font-bold">{avgCompletionTime.toFixed(0)}min</div>
             {/* <p className="text-xs text-muted-foreground">
               <TrendingDown className="inline w-3 h-3 mr-1" />
               -5min from last week
@@ -130,32 +130,30 @@ export const AnalyticsView = () => {
 
       {/* Weekly Overview */}
       <Card>
-        <CardHeader>
-          <CardTitle>Weekly Task Overview</CardTitle>
-          <CardDescription>Tasks completed vs planned for this week</CardDescription>
+        <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg">Weekly Task Overview</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Tasks completed vs planned for this week</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-5">
+          <div className="space-y-3 sm:space-y-4">
             {weeklyData.map((day) => (
-              <div key={day.day} className="flex items-center gap-4">
-                <div className="w-12 text-sm font-medium">{day.day}</div>
+              <div key={day.day} className="flex items-center gap-2 sm:gap-4">
+                <div className="w-10 sm:w-12 text-xs sm:text-sm font-medium">{day.day}</div>
                 <div className="flex-1 space-y-1">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-[10px] sm:text-xs">
                     <span>Completed: {day.completed}</span>
                     <span>Planned: {day.planned}</span>
                   </div>
                   <div className="relative">
-                    {/* Max value for progress should be the max tasks on any day or a fixed sensible number */}
-                    {/* For now, let's assume max planned/completed on a day won't exceed something like 10 for visualization */}
-                    {/* Or, better, calculate progress as percentage of planned for that day */}
-                    <Progress value={day.planned > 0 ? (day.planned / (day.planned + 5)) * 100 : 0} className="h-2" />
+                    <Progress value={day.planned > 0 ? (day.planned / Math.max(day.planned, day.completed, 1)) * 100 : 0} className="h-1.5 sm:h-2" />
                     <Progress 
-                      value={day.planned > 0 ? (day.completed / day.planned) * 100 : (day.completed > 0 ? 100 : 0)}
-                      className="h-2 absolute top-0 bg-green-500" 
+                      value={day.planned > 0 ? (day.completed / Math.max(day.planned, day.completed, 1)) * 100 : (day.completed > 0 ? 100 : 0)}
+                      className="h-1.5 sm:h-2 absolute top-0 bg-green-500"
                     />
                   </div>
                 </div>
-                <Badge variant={day.completed >= day.planned && day.planned > 0 ? "default" : "secondary"}>
+                <Badge variant={day.completed >= day.planned && day.planned > 0 ? "default" : "secondary"}
+                       className="text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
                   {day.planned > 0 ? `${Math.round((day.completed / day.planned) * 100)}%` : (day.completed > 0 ? '100%' : '0%')}
                 </Badge>
               </div>

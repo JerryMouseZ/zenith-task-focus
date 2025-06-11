@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ZenithTask</string>
+    <string name="title_activity_main">ZenithTask</string>
+    <string name="package_name">dev.lovable.zenithtask</string>
+    <string name="custom_url_scheme">dev.lovable.zenithtask</string>
+</resources>

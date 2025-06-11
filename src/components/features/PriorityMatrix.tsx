@@ -62,21 +62,22 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 h-full"> {/* Adjusted gap for sm screens */}
       {quadrants.map((quadrant, index) => (
         <div
           key={quadrant.title}
-          className={`rounded-lg border-2 p-4 ${quadrant.color} transition-all duration-200 hover:shadow-md`}
+          className={`rounded-lg border-2 p-3 sm:p-4 ${quadrant.color} transition-all duration-200 hover:shadow-md flex flex-col`} // Added flex flex-col
         >
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">{quadrant.title}</h3>
-            <p className="text-sm text-gray-600">{quadrant.description}</p>
-            <div className="text-xs text-gray-500 mt-1">
+          <div className="mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800">{quadrant.title}</h3>
+            <p className="text-xs sm:text-sm text-gray-600">{quadrant.description}</p>
+            <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
               {quadrant.tasks.length} task{quadrant.tasks.length !== 1 ? 's' : ''}
             </div>
           </div>
           
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          {/* Made task list container flexible and set max height */}
+          <div className="flex-grow space-y-2 sm:space-y-3 max-h-72 md:max-h-80 lg:max-h-96 overflow-y-auto pr-1"> {/* Adjusted max-h and added pr-1 for scrollbar */}
             {quadrant.tasks.map((task) => (
               <TaskCard
                 key={task.id}
@@ -85,7 +86,7 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
               />
             ))}
             {quadrant.tasks.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="flex-grow flex items-center justify-center text-center py-8 text-gray-400 text-sm">
                 No tasks in this quadrant
               </div>
             )}
