@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +14,7 @@ import { getUserTimezone } from '@/utils/timezoneUtils';
 export const SettingsView = () => {
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gpt-4");
+  const [selectedModel, setSelectedModel] = useState("gemini-flash-preview-05-20");
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -95,6 +94,9 @@ export const SettingsView = () => {
         if (profileData) {
           setProfile(profileData);
           setSelectedTimeZone(profileData.timezone || getUserTimezone());
+          setSelectedModel(profileData.ai_model || "gemini-flash-preview-05-20");
+          setBaseUrl(profileData.ai_base_url || "");
+          setApiKey(profileData.ai_api_key || "");
         } else {
           // Set default timezone if no profile
           setSelectedTimeZone(getUserTimezone());
@@ -119,21 +121,43 @@ export const SettingsView = () => {
     fetchProfileData();
   }, [toast]);
 
-  const handleSaveGeneralSettings = () => {
-    // Handle save for general settings (AI, Appearance etc.)
-    console.log("General settings saved:", { baseUrl, apiKey, selectedModel, notifications, darkMode });
-    toast({ 
-      title: 'General Settings Saved', 
-      description: 'AI, Appearance, and other settings have been saved.',
-      variant: 'default'
-    });
+  const handleSaveGeneralSettings = async () => {
+    setIsSavingProfile(true);
+    try {
+      const updatedProfile = await profileService.updateProfile({
+        timezone: selectedTimeZone,
+        ai_model: selectedModel,
+        ai_base_url: baseUrl,
+        ai_api_key: apiKey,
+      });
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+        toast({
+          title: 'Success',
+          description: 'General settings saved successfully.',
+          variant: 'default',
+        });
+      }
+    } catch (error) {
+      console.error("Error saving general settings:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save general settings. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
     try {
       const updatedProfile = await profileService.updateProfile({ 
-        timezone: selectedTimeZone 
+        timezone: selectedTimeZone,
+        ai_model: selectedModel,
+        ai_base_url: baseUrl,
+        ai_api_key: apiKey
       });
       
       if (updatedProfile) {
@@ -198,25 +222,21 @@ export const SettingsView = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone-select">Time Zone</Label>
-                <Select
-                  value={selectedTimeZone}
-                  onValueChange={setSelectedTimeZone}
-                  disabled={isLoadingProfile}
-                >
-                  <SelectTrigger id="timezone-select">
-                    <SelectValue placeholder="Select your time zone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeZoneOptions.map(tz => (
-                      <SelectItem key={tz.value} value={tz.value}>
-                        {tz.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                 <p className="text-sm text-muted-foreground">
-                  Select your local time zone for accurate scheduling and reminders.
-                </p>
+                <select
+  id="timezone-select"
+  className="w-full border rounded px-3 py-2"
+  value={selectedTimeZone}
+  onChange={e => setSelectedTimeZone(e.target.value)}
+  disabled={isLoadingProfile}
+>
+  <option value="" disabled>Select your time zone</option>
+  {timeZoneOptions.map(tz => (
+    <option key={tz.value} value={tz.value}>{tz.label}</option>
+  ))}
+</select>
+<p className="text-sm text-muted-foreground">
+  Select your local time zone for accurate scheduling and reminders.
+</p>
               </div>
               <Button onClick={handleSaveProfile} disabled={isLoadingProfile || isSavingProfile}>
                 {isSavingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
@@ -239,30 +259,29 @@ export const SettingsView = () => {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="model">AI Model</Label>
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select AI model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                    <SelectItem value="claude-3">Claude 3</SelectItem>
-                    <SelectItem value="local-model">Local Model</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="model"
+                  type="text"
+                  placeholder="e.g. gemini-flash-preview-05-20, gpt-4, llama-3, etc."
+                  value={selectedModel}
+                  onChange={e => setSelectedModel(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Enter any model name supported by your provider. Default: gemini-flash-preview-05-20
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="baseUrl">Custom Base URL (Optional)</Label>
+                <Label htmlFor="baseUrl">OpenAI-Compatible Base URL (Optional)</Label>
                 <Input
                   id="baseUrl"
                   type="url"
-                  placeholder="https://api.example.com/v1"
+                  placeholder="https://api.openai.com/v1 or your custom endpoint"
                   value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
+                  onChange={e => setBaseUrl(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Leave empty to use default endpoint
+                  Leave empty to use the default endpoint. For custom providers, enter their OpenAI-compatible API base URL.
                 </p>
               </div>
 
@@ -276,11 +295,11 @@ export const SettingsView = () => {
                   onChange={(e) => setApiKey(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                   Your API key is stored securely and encrypted.
+                  Your API key is stored securely and encrypted.
                 </p>
               </div>
 
-               {/* Separator and AI Features remain as they were, no changes needed here for profile */}
+              {/* Separator and AI Features remain as they were, no changes needed here for profile */}
               <Separator />
 
               <div className="space-y-4">
@@ -289,21 +308,21 @@ export const SettingsView = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Task Breakdown</p>
-                       <p className="text-sm text-muted-foreground">Let AI break down complex tasks.</p>
+                      <p className="text-sm text-muted-foreground">Let AI break down complex tasks.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Smart Scheduling</p>
-                       <p className="text-sm text-muted-foreground">AI-powered schedule planning.</p>
+                      <p className="text-sm text-muted-foreground">AI-powered schedule planning.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Energy Prediction</p>
-                       <p className="text-sm text-muted-foreground">Predict and track energy levels.</p>
+                      <p className="text-sm text-muted-foreground">Predict and track energy levels.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -347,30 +366,26 @@ export const SettingsView = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="fontSize">Font Size</Label>
-                <Select defaultValue="medium">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="small">Small</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="large">Large</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  id="fontSize"
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="density">Display Density</Label>
-                <Select defaultValue="comfortable">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="compact">Compact</SelectItem>
-                    <SelectItem value="comfortable">Comfortable</SelectItem>
-                    <SelectItem value="spacious">Spacious</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  id="density"
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="compact">Compact</option>
+                  <option value="comfortable">Comfortable</option>
+                  <option value="spacious">Spacious</option>
+                </select>
               </div>
             </CardContent>
           </Card>
@@ -495,17 +510,15 @@ export const SettingsView = () => {
 
               <div className="space-y-2">
                 <Label>Data Retention</Label>
-                <Select defaultValue="1year">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30days">30 Days</SelectItem>
-                    <SelectItem value="6months">6 Months</SelectItem>
-                    <SelectItem value="1year">1 Year</SelectItem>
-                    <SelectItem value="forever">Forever</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  id="dataRetention"
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="30days">30 Days</option>
+                  <option value="6months">6 Months</option>
+                  <option value="1year">1 Year</option>
+                  <option value="forever">Forever</option>
+                </select>
                 <p className="text-sm text-muted-foreground">
                   How long to keep completed tasks and analytics data
                 </p>

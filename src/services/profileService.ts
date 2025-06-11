@@ -8,6 +8,9 @@ export interface Profile {
   full_name?: string;
   avatar_url?: string;
   timezone?: string;
+  ai_model?: string | null;
+  ai_base_url?: string | null;
+  ai_api_key?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -46,12 +49,15 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 // Function to create a new profile
-async function createProfile(userId: string, email: string, fullName: string): Promise<Profile | null> {
+async function createProfile(userId: string, email: string, fullName: string, ai_model: string | null = null, ai_base_url: string | null = null, ai_api_key: string | null = null): Promise<Profile | null> {
   const profileData = {
     id: userId,
     email: email,
     full_name: fullName,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    ai_model,
+    ai_base_url,
+    ai_api_key
   };
 
   const { data, error } = await supabase
@@ -75,7 +81,7 @@ async function createProfile(userId: string, email: string, fullName: string): P
 }
 
 // Function to update the current user's profile
-export async function updateProfile(updates: Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>): Promise<Profile | null> {
+export async function updateProfile(updates: Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at' | 'ai_model' | 'ai_base_url' | 'ai_api_key'>> & { ai_model?: string | null; ai_base_url?: string | null; ai_api_key?: string | null }): Promise<Profile | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated for profile update');
 
@@ -87,6 +93,10 @@ export async function updateProfile(updates: Partial<Omit<Profile, 'id' | 'creat
   // Remove id, created_at from updates if they somehow got there
   delete profileData.id;
   delete profileData.created_at;
+  // Remove fields if not present (for type safety)
+  if (!('ai_model' in profileData)) profileData.ai_model = null;
+  if (!('ai_base_url' in profileData)) profileData.ai_base_url = null;
+  if (!('ai_api_key' in profileData)) profileData.ai_api_key = null;
 
   const { data, error } = await supabase
     .from('profiles')
