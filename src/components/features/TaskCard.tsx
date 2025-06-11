@@ -1,7 +1,7 @@
-
 import { Clock, Calendar } from "lucide-react";
 import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
+import { differenceInCalendarDays } from "date-fns";
 
 interface TaskCardProps {
   task: Task;
@@ -11,25 +11,24 @@ interface TaskCardProps {
 export const TaskCard = ({ task, onClick }: TaskCardProps) => {
   const formatDueDate = (date: Date) => {
     const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+    // Use calendar day difference to avoid timezone-related rounding issues
+    const diffDays = differenceInCalendarDays(date, now);
+
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Tomorrow";
     if (diffDays === -1) return "Yesterday";
     if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
     if (diffDays <= 7) return `${diffDays} days`;
-    
+
     return date.toLocaleDateString();
   };
 
   const getDueDateColor = (date: Date) => {
     const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+    const diffDays = differenceInCalendarDays(date, now);
+
     if (diffDays < 0) return "text-red-600";
-    if (diffDays <= 1) return "text-orange-600";
+    if (diffDays === 0) return "text-orange-600";
     if (diffDays <= 3) return "text-yellow-600";
     return "text-gray-600";
   };
