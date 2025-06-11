@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Define Profile Interface
@@ -6,7 +7,7 @@ export interface Profile {
   email?: string;
   full_name?: string;
   avatar_url?: string;
-  timezone?: string; // Added
+  timezone?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -15,7 +16,7 @@ export interface Profile {
 export async function getProfile(): Promise<Profile | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    // Or throw new Error('User not authenticated');
+    console.log('No authenticated user found');
     return null;
   }
 
@@ -26,10 +27,44 @@ export async function getProfile(): Promise<Profile | null> {
     .single();
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      // No profile found, create one
+      console.log('No profile found, creating new profile');
+      return await createProfile(user.id, user.email || '', '');
+    }
     console.error('Error fetching profile:', error);
-    // Or throw error;
-    return null;
+    throw error;
   }
+
+  if (!data) return null;
+
+  return {
+     ...data,
+     created_at: new Date(data.created_at),
+     updated_at: new Date(data.updated_at),
+  } as Profile;
+}
+
+// Function to create a new profile
+async function createProfile(userId: string, email: string, fullName: string): Promise<Profile | null> {
+  const profileData = {
+    id: userId,
+    email: email,
+    full_name: fullName,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  };
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .insert(profileData)
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('Error creating profile:', error);
+    throw error;
+  }
+
   if (!data) return null;
 
   return {
@@ -44,7 +79,10 @@ export async function updateProfile(updates: Partial<Omit<Profile, 'id' | 'creat
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated for profile update');
 
-  const profileData: any = { ...updates, updated_at: new Date().toISOString() };
+  const profileData: any = { 
+    ...updates, 
+    updated_at: new Date().toISOString()
+  };
 
   // Remove id, created_at from updates if they somehow got there
   delete profileData.id;
@@ -59,8 +97,9 @@ export async function updateProfile(updates: Partial<Omit<Profile, 'id' | 'creat
 
   if (error) {
     console.error('Error updating profile:', error);
-    throw error; // Rethrow to be handled by the caller
+    throw error;
   }
+  
   if (!data) return null;
 
   return {

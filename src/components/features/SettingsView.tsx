@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { profileService, Profile } from '@/services/profileService';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Brain, Palette, Bell, Shield, UserCircle } from "lucide-react"; // Added UserCircle
+import { Save, Brain, Palette, Bell, Shield, UserCircle } from "lucide-react";
+import { getUserTimezone } from '@/utils/timezoneUtils';
 
 export const SettingsView = () => {
   const [baseUrl, setBaseUrl] = useState("");
@@ -22,15 +22,27 @@ export const SettingsView = () => {
   // Profile specific state
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedTimeZone, setSelectedTimeZone] = useState<string>('');
-  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(true); // Renamed to avoid conflict
+  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(true);
+  const [isSavingProfile, setIsSavingProfile] = useState<boolean>(false);
   const { toast } = useToast();
 
   // Generate time zone options using Intl API
   const timeZoneOptions = React.useMemo(() => {
     try {
-      return Intl.supportedValuesOf('timeZone').map(tz => ({ value: tz, label: tz }));
+      const userTimezone = getUserTimezone();
+      const zones = Intl.supportedValuesOf('timeZone').map(tz => ({ 
+        value: tz, 
+        label: tz.replace(/_/g, ' ')
+      }));
+      
+      // Sort with user's current timezone first
+      return zones.sort((a, b) => {
+        if (a.value === userTimezone) return -1;
+        if (b.value === userTimezone) return 1;
+        return a.label.localeCompare(b.label);
+      });
     } catch (e) {
-      // Fallback for environments where Intl.supportedValuesOf is not available (e.g. older Node for SSR)
+      // Fallback for environments where Intl.supportedValuesOf is not available
       console.warn("Intl.supportedValuesOf('timeZone') is not supported, using a fallback list.");
       return [
         { value: 'UTC', label: 'UTC' },
@@ -54,13 +66,24 @@ export const SettingsView = () => {
         const profileData = await profileService.getProfile();
         if (profileData) {
           setProfile(profileData);
-          setSelectedTimeZone(profileData.timezone || '');
+          setSelectedTimeZone(profileData.timezone || getUserTimezone());
         } else {
-          toast({ title: 'Profile Not Found', description: 'Could not load user profile.', variant: 'warning' });
+          // Set default timezone if no profile
+          setSelectedTimeZone(getUserTimezone());
+          toast({ 
+            title: 'Profile Not Found', 
+            description: 'A new profile will be created when you save your settings.', 
+            variant: 'default' 
+          });
         }
       } catch (error) {
-        toast({ title: 'Error', description: 'Failed to load profile data.', variant: 'destructive' });
         console.error("Error fetching profile:", error);
+        setSelectedTimeZone(getUserTimezone());
+        toast({ 
+          title: 'Error', 
+          description: 'Failed to load profile data. Using default settings.', 
+          variant: 'destructive' 
+        });
       } finally {
         setIsLoadingProfile(false);
       }
@@ -71,24 +94,37 @@ export const SettingsView = () => {
   const handleSaveGeneralSettings = () => {
     // Handle save for general settings (AI, Appearance etc.)
     console.log("General settings saved:", { baseUrl, apiKey, selectedModel, notifications, darkMode });
-    toast({ title: 'General Settings Saved', description: 'AI, Appearance, and other settings have been saved.'});
+    toast({ 
+      title: 'General Settings Saved', 
+      description: 'AI, Appearance, and other settings have been saved.',
+      variant: 'default'
+    });
   };
 
   const handleSaveProfile = async () => {
-    if (!profile) {
-      toast({ title: 'Error', description: 'Profile not loaded.', variant: 'destructive' });
-      return;
-    }
-    setIsLoadingProfile(true);
+    setIsSavingProfile(true);
     try {
-      await profileService.updateProfile({ timezone: selectedTimeZone });
-      setProfile(prev => prev ? { ...prev, timezone: selectedTimeZone, updated_at: new Date() } : null);
-      toast({ title: 'Success', description: 'Profile updated successfully.' });
+      const updatedProfile = await profileService.updateProfile({ 
+        timezone: selectedTimeZone 
+      });
+      
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+        toast({ 
+          title: 'Success', 
+          description: 'Profile updated successfully.',
+          variant: 'default'
+        });
+      }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
       console.error("Error updating profile:", error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update profile. Please try again.',
+        variant: 'destructive' 
+      });
     } finally {
-      setIsLoadingProfile(false);
+      setIsSavingProfile(false);
     }
   };
 

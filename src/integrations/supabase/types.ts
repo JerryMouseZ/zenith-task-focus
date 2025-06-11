@@ -16,6 +16,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          timezone: string | null
           updated_at: string
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          timezone?: string | null
           updated_at?: string
         }
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          timezone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -81,6 +84,7 @@ export type Database = {
           parent_id: string | null
           priority: string
           project_id: string | null
+          reminder_sent_at: string | null
           start_time: string | null
           status: string
           tags: string[] | null
@@ -100,6 +104,7 @@ export type Database = {
           parent_id?: string | null
           priority?: string
           project_id?: string | null
+          reminder_sent_at?: string | null
           start_time?: string | null
           status?: string
           tags?: string[] | null
@@ -119,6 +124,7 @@ export type Database = {
           parent_id?: string | null
           priority?: string
           project_id?: string | null
+          reminder_sent_at?: string | null
           start_time?: string | null
           status?: string
           tags?: string[] | null
