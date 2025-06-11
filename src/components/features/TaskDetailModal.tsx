@@ -166,7 +166,9 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-semibold text-gray-900">{editedTask.title}</h2>
                 {editedTask.isFixedTime && (
-                  <Lock className="w-4 h-4 text-amber-500" title="固定时间任务" />
+                  <div className="flex items-center" title="固定时间任务">
+                    <Lock className="w-4 h-4 text-amber-500" />
+                  </div>
                 )}
               </div>
             )}

@@ -233,7 +233,9 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                       {task.title}
                     </h3>
                     {task.isFixedTime && (
-                      <Lock className="w-4 h-4 text-amber-500" title="固定时间任务" />
+                      <div className="flex items-center" title="固定时间任务">
+                        <Lock className="w-4 h-4 text-amber-500" />
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
