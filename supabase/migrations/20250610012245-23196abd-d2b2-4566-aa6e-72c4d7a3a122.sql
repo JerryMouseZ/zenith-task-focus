@@ -1,6 +1,6 @@
 
 -- Create tasks table
-CREATE TABLE public.tasks (
+CREATE TABLE IF NOT EXISTS public.tasks (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE public.tasks (
 );
 
 -- Create subtasks table
-CREATE TABLE public.subtasks (
+CREATE TABLE IF NOT EXISTS public.subtasks (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   task_id UUID NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -33,28 +33,28 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subtasks ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for tasks
-CREATE POLICY "Users can view their own tasks" 
+CREATE POLICY "Users can view their own tasks" IF NOT EXISTS
   ON public.tasks 
   FOR SELECT 
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can create their own tasks" 
+CREATE POLICY "Users can create their own tasks" IF NOT EXISTS
   ON public.tasks 
   FOR INSERT 
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own tasks" 
+CREATE POLICY "Users can update their own tasks" IF NOT EXISTS
   ON public.tasks 
   FOR UPDATE 
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own tasks" 
+CREATE POLICY "Users can delete their own tasks" IF NOT EXISTS
   ON public.tasks 
   FOR DELETE 
   USING (auth.uid() = user_id);
 
 -- Create policies for subtasks
-CREATE POLICY "Users can view subtasks of their tasks" 
+CREATE POLICY "Users can view subtasks of their tasks" IF NOT EXISTS
   ON public.subtasks 
   FOR SELECT 
   USING (EXISTS (
@@ -63,7 +63,7 @@ CREATE POLICY "Users can view subtasks of their tasks"
     AND tasks.user_id = auth.uid()
   ));
 
-CREATE POLICY "Users can create subtasks for their tasks" 
+CREATE POLICY "Users can create subtasks for their tasks" IF NOT EXISTS
   ON public.subtasks 
   FOR INSERT 
   WITH CHECK (EXISTS (
@@ -72,7 +72,7 @@ CREATE POLICY "Users can create subtasks for their tasks"
     AND tasks.user_id = auth.uid()
   ));
 
-CREATE POLICY "Users can update subtasks of their tasks" 
+CREATE POLICY "Users can update subtasks of their tasks" IF NOT EXISTS
   ON public.subtasks 
   FOR UPDATE 
   USING (EXISTS (
@@ -81,7 +81,7 @@ CREATE POLICY "Users can update subtasks of their tasks"
     AND tasks.user_id = auth.uid()
   ));
 
-CREATE POLICY "Users can delete subtasks of their tasks" 
+CREATE POLICY "Users can delete subtasks of their tasks" IF NOT EXISTS
   ON public.subtasks 
   FOR DELETE 
   USING (EXISTS (
@@ -141,7 +141,7 @@ END;
 $$;
 
 -- Create indexes for better performance
-CREATE INDEX idx_tasks_user_id ON public.tasks(user_id);
-CREATE INDEX idx_tasks_start_time ON public.tasks(start_time);
-CREATE INDEX idx_tasks_due_date ON public.tasks(due_date);
-CREATE INDEX idx_subtasks_task_id ON public.subtasks(task_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON public.tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_start_time ON public.tasks(start_time);
+CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON public.tasks(due_date);
+CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON public.subtasks(task_id);
