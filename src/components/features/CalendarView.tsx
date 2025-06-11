@@ -62,7 +62,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
   const renderWeekView = () => {
     const weekDays = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(currentDate);
-      date.setDate(date.getDate() - date.getDay() + i);
+      date.setDate(date.getDate() + i);
       return date;
     });
 
