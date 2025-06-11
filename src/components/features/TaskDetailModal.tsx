@@ -23,6 +23,9 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
   const [isEditing, setIsEditing] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [showSubtaskModal, setShowSubtaskModal] = useState(false);
+  // 新增本地 state 管理天和小时
+  const [estimatedDays, setEstimatedDays] = useState(0);
+  const [estimatedHours, setEstimatedHours] = useState(0);
   const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting, useChildTasks } = useTasks();
 
   // 获取子任务
@@ -41,6 +44,9 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
       if (task) {
         setEditedTask(task);
         setIsEditing(false);
+        // 初始化天和小时
+        setEstimatedDays(task.estimatedTime ? Math.floor(task.estimatedTime / 1440) : 0);
+        setEstimatedHours(task.estimatedTime ? Math.floor((task.estimatedTime % 1440) / 60) : 0);
       } else {
         // New task
         setEditedTask({
@@ -55,6 +61,8 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
           recurrence: 'none',
           recurrence_end_date: undefined,
         });
+        setEstimatedDays(0);
+        setEstimatedHours(0);
         setIsEditing(true);
       }
     } else {
@@ -68,13 +76,17 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
       return;
     }
 
+    // 存储前将 estimatedDays/estimatedHours 合成为 estimatedTime
+    const estimatedTime = estimatedDays * 1440 + estimatedHours * 60;
+    const taskToSave = { ...editedTask, estimatedTime };
+
     try {
       if (task) {
         // Update existing task
-        updateTask({ id: task.id, updates: editedTask });
+        updateTask({ id: task.id, updates: taskToSave });
       } else {
         // Create new task
-        createTask(editedTask as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
+        createTask(taskToSave as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>);
       }
       setIsEditing(false);
       onClose();
@@ -82,6 +94,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
       console.error('Error saving task:', error);
     }
   };
+
 
   const handleDelete = async () => {
     if (task && window.confirm('确定要删除这个任务吗？')) {
@@ -324,27 +337,57 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
           </div>
 
           {/* Estimated Time */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              预估时间（分钟）
-            </label>
-            {isEditing ? (
-              <Input
-                type="number"
-                value={editedTask.estimatedTime || ""}
-                onChange={(e) => setEditedTask({ 
-                  ...editedTask, 
-                  estimatedTime: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
-                placeholder="60"
-              />
-            ) : (
-              <div className="flex items-center gap-2 text-gray-600">
-                <Clock className="w-4 h-4" />
-                {editedTask.estimatedTime ? `${editedTask.estimatedTime} 分钟` : "未预估"}
-              </div>
-            )}
-          </div>
+<div>
+  <label className="text-sm font-medium text-gray-700 mb-2 block">
+    预估时间
+  </label>
+  {isEditing ? (
+    <div className="flex gap-2 items-center">
+      <Input
+        type="number"
+        min={0}
+        value={estimatedDays}
+        onChange={e => {
+          const days = parseInt(e.target.value) || 0;
+          setEstimatedDays(days);
+          setEditedTask({
+            ...editedTask,
+            estimatedTime: days * 1440 + estimatedHours * 60
+          });
+        }}
+        placeholder="天"
+        className="w-20"
+      />
+      <span>天</span>
+      <Input
+        type="number"
+        min={0}
+        max={23}
+        value={estimatedHours}
+        onChange={e => {
+          let hours = parseInt(e.target.value) || 0;
+          if (hours > 23) hours = 23;
+          setEstimatedHours(hours);
+          setEditedTask({
+            ...editedTask,
+            estimatedTime: estimatedDays * 1440 + hours * 60
+          });
+        }}
+        placeholder="小时"
+        className="w-20"
+      />
+      <span>小时</span>
+    </div>
+  ) : (
+    <div className="flex items-center gap-2 text-gray-600">
+      <Clock className="w-4 h-4" />
+      {editedTask.estimatedTime && editedTask.estimatedTime > 0
+        ? `${Math.floor(editedTask.estimatedTime / 1440)} 天 ${Math.floor((editedTask.estimatedTime % 1440) / 60)} 小时`
+        : "未预估"}
+    </div>
+  )}
+</div>
+
 
           {/* Recurrence Settings */}
           <div className="grid grid-cols-2 gap-4">

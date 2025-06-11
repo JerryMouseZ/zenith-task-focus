@@ -11,10 +11,13 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
   const { tasks, isLoading } = useTasks();
 
   const isUrgent = (task: Task): boolean => {
-    if (!task.dueDate) return false;
-    const daysDiff = Math.ceil((task.dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return daysDiff <= 3;
-  };
+  if (!task.dueDate) return false;
+  // estimatedTime单位为分钟，转换为天
+  const estimatedDays = task.estimatedTime ? task.estimatedTime / 1440 : 0;
+  const daysThreshold = estimatedDays + 2;
+  const daysDiff = (task.dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  return daysDiff <= daysThreshold;
+};
 
   const isImportant = (task: Task): boolean => {
     return task.priority === TaskPriority.HIGH;
