@@ -29,23 +29,27 @@ export const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps)
   const { data: childTasks = [], refetch: refetchChildTasks } = useChildTasks(task?.id || "");
 
   useEffect(() => {
-    if (task) {
-      setEditedTask(task);
-      setIsEditing(false);
+    if (isOpen) {
+      if (task) {
+        setEditedTask(task);
+        setIsEditing(false);
+      } else {
+        // New task
+        setEditedTask({
+          title: "",
+          description: "",
+          priority: TaskPriority.MEDIUM,
+          status: TaskStatus.TODO,
+          tags: [],
+          subtasks: [],
+          isFixedTime: false,
+        });
+        setIsEditing(true);
+      }
     } else {
-      // New task
-      setEditedTask({
-        title: "",
-        description: "",
-        priority: TaskPriority.MEDIUM,
-        status: TaskStatus.TODO,
-        tags: [],
-        subtasks: [],
-        isFixedTime: false,
-      });
-      setIsEditing(true);
+      setIsEditing(false);
     }
-  }, [task]);
+  }, [task, isOpen]);
 
   const handleSave = async () => {
     if (!editedTask.title?.trim()) {
