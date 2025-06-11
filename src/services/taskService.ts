@@ -31,6 +31,7 @@ export interface DatabaseSubtask {
 }
 
 export const taskService = {
+
   // 获取所有任务
   async getTasks(): Promise<Task[]> {
     const { data, error } = await supabase
@@ -86,6 +87,7 @@ export const taskService = {
       tags: task.tags || [],
       project_id: task.projectId || null,
       parent_id: task.parentId || null,
+      completed: task.completed === undefined ? false : task.completed,
     };
 
     // 如果有开始时间且不是固定时间，调整其他任务时间
@@ -128,6 +130,7 @@ export const taskService = {
     if (updates.tags !== undefined) updateData.tags = updates.tags;
     if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
     if (updates.parentId !== undefined) updateData.parent_id = updates.parentId;
+    if (updates.completed !== undefined) updateData.completed = updates.completed;
 
     updateData.updated_at = new Date().toISOString();
 
@@ -241,6 +244,7 @@ function transformDatabaseTaskToTask(dbTask: any): Task {
     actualTime: dbTask.actual_time,
     projectId: dbTask.project_id,
     parentId: dbTask.parent_id,
+    completed: dbTask.completed ?? false,
     subtasks: dbTask.subtasks?.map(transformDatabaseSubtaskToSubtask) || [],
   };
 }

@@ -17,6 +17,7 @@ export interface Task {
   subtasks: Subtask[];
   projectId?: string;
   parentId?: string; // 新增父任务ID
+  completed: boolean;
 }
 
 export interface Subtask {

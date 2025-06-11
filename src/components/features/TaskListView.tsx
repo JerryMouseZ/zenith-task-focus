@@ -26,7 +26,8 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   // Get all unique tags from tasks
   const allTags = Array.from(new Set(tasks.flatMap(task => task.tags)));
 
-  const filteredTasks = tasks.filter(task => {
+  // 只显示未完成的任务
+  const filteredTasks = tasks.filter(task => !task.completed).filter(task => {
     // Enhanced search to include tag searching
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,8 +52,14 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   };
 
   const handleTaskStatusToggle = (task: Task) => {
-    const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.TODO : TaskStatus.COMPLETED;
-    updateTask({ id: task.id, updates: { status: newStatus } });
+    const isCompleting = !(task.completed || task.status === TaskStatus.COMPLETED);
+    updateTask({
+      id: task.id,
+      updates: {
+        status: isCompleting ? TaskStatus.COMPLETED : TaskStatus.TODO,
+        completed: isCompleting,
+      }
+    });
   };
 
   const getPriorityColor = (priority: TaskPriority) => {

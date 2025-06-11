@@ -18,8 +18,8 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
 
   const hours = Array.from({ length: 14 }, (_, i) => i + 8);
 
-  // 只显示有截止时间的任务
-  const scheduledTasks = tasks.filter(task => task.dueDate && task.status !== TaskStatus.COMPLETED);
+  // 只显示有截止时间且未完成的任务
+  const scheduledTasks = tasks.filter(task => task.dueDate && !task.completed);
 
   const renderDayView = () => (
     <div className="grid grid-cols-[80px_1fr] gap-0 border rounded-lg overflow-hidden">

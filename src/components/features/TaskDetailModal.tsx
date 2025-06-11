@@ -172,6 +172,18 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
             )}
           </div>
 
+          {/* Completed Checkbox */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <Checkbox
+                checked={!!editedTask.completed}
+                onCheckedChange={checked => isEditing && setEditedTask({ ...editedTask, completed: !!checked })}
+                disabled={!isEditing}
+              />
+              标记为已完成
+            </label>
+          </div>
+
           {/* Description */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">

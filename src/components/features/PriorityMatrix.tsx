@@ -20,8 +20,8 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
     return task.priority === TaskPriority.HIGH;
   };
 
-  // 只显示未完成的任务
-  const activeTasks = tasks.filter(task => task.status !== TaskStatus.COMPLETED);
+  // 只显示未完成的任务（兼容 completed 字段）
+  const activeTasks = tasks.filter(task => !task.completed);
 
   const quadrants: TaskQuadrant[] = [
     {

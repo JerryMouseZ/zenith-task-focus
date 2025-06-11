@@ -14,8 +14,8 @@ export const CompletedTasksView = ({ onTaskClick }: CompletedTasksViewProps) => 
   const [searchTerm, setSearchTerm] = useState("");
   const { tasks, isLoading, updateTask, deleteTask } = useTasks();
 
-  // 只显示已完成的任务
-  const completedTasks = tasks.filter(task => task.status === TaskStatus.COMPLETED);
+  // 只显示已完成的任务（兼容 status 和 completed 字段）
+  const completedTasks = tasks.filter(task => task.completed || task.status === TaskStatus.COMPLETED);
 
   const filteredTasks = completedTasks.filter(task =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,7 +24,7 @@ export const CompletedTasksView = ({ onTaskClick }: CompletedTasksViewProps) => 
   );
 
   const handleRestoreTask = (taskId: string) => {
-    updateTask({ id: taskId, updates: { status: TaskStatus.TODO } });
+    updateTask({ id: taskId, updates: { status: TaskStatus.TODO, completed: false } });
   };
 
   const handleDeleteTask = (taskId: string) => {
