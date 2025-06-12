@@ -9,17 +9,27 @@ interface CalendarViewProps {
   onTaskClick: (task: Task) => void;
 }
 
-type ViewMode = "day" | "week" | "month";
+type ViewMode = "day" | "week";
+
+type CalendarMode = "start" | "due"; // 新增：区分开始/截止时间视图
 
 export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
+  // 默认展示开始时间视图
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>("start"); // "start" | "due"
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [currentDate, setCurrentDate] = useState(new Date());
   const { tasks, isLoading } = useTasks();
 
   const hours = Array.from({ length: 14 }, (_, i) => i + 8);
 
-  // 只显示有截止时间且未完成的任务
-  const scheduledTasks = tasks.filter(task => task.dueDate && !task.completed);
+  // 根据模式过滤任务
+  const filteredTasks = tasks.filter(task => {
+    if (calendarMode === "start") {
+      return task.startTime && !task.completed;
+    } else {
+      return task.dueDate && !task.completed;
+    }
+  });
 
   const renderDayView = () => (
     <div className="grid grid-cols-[80px_1fr] gap-0 border rounded-lg overflow-hidden">
@@ -39,20 +49,30 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         </div>
         {hours.map((hour) => (
           <div key={hour} className="h-16 border-b border-border relative hover:bg-muted/20 cursor-pointer">
-            {scheduledTasks
-              .filter(task => task.dueDate && 
-                task.dueDate.toDateString() === currentDate.toDateString() &&
-                task.dueDate.getHours() === hour)
-              .map(task => (
-                <div
-                  key={task.id}
-                  onClick={() => onTaskClick(task)}
-                  className="absolute left-2 right-2 top-1 bg-red-100 border-l-4 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
-                >
-                  <div className="font-medium">{task.title}</div>
-                  <div className="text-muted-foreground">Due: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
-              ))}
+            {filteredTasks
+              .filter(task => {
+                const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                return date &&
+                  date.toDateString() === currentDate.toDateString() &&
+                  date.getHours() === hour;
+              })
+              .map(task => {
+                const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                return (
+                  <div
+                    key={task.id}
+                    onClick={() => onTaskClick(task)}
+                    className="absolute left-2 right-2 top-1 bg-red-100 border-l-4 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
+                  >
+                    <div className="font-medium">{task.title}</div>
+                    <div className="text-muted-foreground">
+                      {calendarMode === "start"
+                        ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+                        : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         ))}
       </div>
@@ -86,20 +106,30 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             </div>
             {hours.map((hour) => (
               <div key={hour} className="h-12 border-b border-border border-l border-border relative hover:bg-muted/20 cursor-pointer">
-                {scheduledTasks
-                  .filter(task => task.dueDate && 
-                    task.dueDate.toDateString() === day.toDateString() && 
-                    task.dueDate.getHours() === hour)
-                  .map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => onTaskClick(task)}
-                      className="absolute inset-1 bg-red-100 border-l-2 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
-                    >
-                      <div className="font-medium truncate">{task.title}</div>
-                      <div className="text-muted-foreground text-xs">Due</div>
-                    </div>
-                  ))}
+                {filteredTasks
+                  .filter(task => {
+                    const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                    return date &&
+                      date.toDateString() === day.toDateString() &&
+                      date.getHours() === hour;
+                  })
+                  .map(task => {
+                    const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => onTaskClick(task)}
+                        className="absolute inset-1 bg-red-100 border-l-2 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
+                      >
+                        <div className="font-medium truncate">{task.title}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {calendarMode === "start"
+                            ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+                            : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             ))}
           </div>
@@ -183,48 +213,63 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-semibold">日历</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setViewMode("day")} 
-                    className={viewMode === "day" ? "bg-green-50 text-green-700" : ""}>
-              Day
+            {/* 新增：切换开始/截止时间模式 */}
+            <Button
+              variant={calendarMode === "start" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCalendarMode("start")}
+              className={calendarMode === "start" ? "bg-green-500 text-white" : ""}
+            >
+              开始时间视图
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setViewMode("week")}
-                    className={viewMode === "week" ? "bg-green-50 text-green-700" : ""}>
-              Week
+            <Button
+              variant={calendarMode === "due" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCalendarMode("due")}
+              className={calendarMode === "due" ? "bg-green-500 text-white" : ""}
+            >
+              截止时间视图
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setViewMode("month")}
-                    className={viewMode === "month" ? "bg-green-50 text-green-700" : ""}>
-              Month
+            {/* 只在截止时间模式下显示月视图切换按钮 */}
+            <Button
+              variant={viewMode === "day" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("day")}
+              className={viewMode === "day" ? "bg-green-50 text-green-700" : ""}
+            >
+              日视图
             </Button>
+            <Button
+              variant={viewMode === "week" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("week")}
+              className={viewMode === "week" ? "bg-green-50 text-green-700" : ""}
+            >
+              周视图
+            </Button>
+
           </div>
         </div>
-        
-        {/* <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="font-medium min-w-[140px] text-center">
-            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-          </span>
-          <Button variant="outline" size="sm">
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div> */}
       </div>
 
+      {/* 视图说明，根据模式变化 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-  <div className="flex items-center gap-2 text-blue-800">
-    <div className="w-3 h-3 bg-orange-500 rounded"></div>
-    <span className="text-sm font-medium">到期任务</span>
-    <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
-    <span className="text-sm font-medium">逾期任务</span>
-  </div>
-  <p className="text-sm text-blue-700 mt-1">日历根据任务截止日期显示任务。橙色表示即将到期，红色表示已逾期任务。</p>
-</div>
-<Card className="p-4">
-  {viewMode === "day" && renderDayView()}
-  {viewMode === "week" && renderWeekView()}
-  {viewMode === "month" && renderMonthView()}
-</Card>
+        <div className="flex items-center gap-2 text-blue-800">
+          <div className="w-3 h-3 bg-orange-500 rounded"></div>
+          <span className="text-sm font-medium">{calendarMode === "start" ? "即将开始" : "到期任务"}</span>
+          <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
+          <span className="text-sm font-medium">{calendarMode === "start" ? "已过开始时间" : "逾期任务"}</span>
+        </div>
+        <p className="text-sm text-blue-700 mt-1">
+          日历根据任务{calendarMode === "start" ? "开始时间" : "截止日期"}显示任务。
+          橙色表示即将{calendarMode === "start" ? "开始" : "到期"}，红色表示已{calendarMode === "start" ? "过开始时间" : "逾期"}任务。
+        </p>
+      </div>
+      <Card className="p-4">
+        {viewMode === "day" && renderDayView()}
+        {viewMode === "week" && renderWeekView()}
+
+      </Card>
     </div>
   );
 };
