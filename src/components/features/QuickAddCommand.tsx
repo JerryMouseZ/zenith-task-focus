@@ -77,6 +77,12 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
     }
   };
 
+  const handleCloseTaskModal = () => {
+    setShowTaskModal(false);
+    setParsedTask(null);
+    setPrompt("");
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -122,11 +128,7 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
         <TaskDetailModal
           task={parsedTask as Task}
           isOpen={showTaskModal}
-          onClose={() => {
-            setShowTaskModal(false);
-            setParsedTask(null);
-            setPrompt("");
-          }}
+          onClose={handleCloseTaskModal}
         />
       )}
     </>
