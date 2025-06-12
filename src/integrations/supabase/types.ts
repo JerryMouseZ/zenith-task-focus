@@ -11,6 +11,9 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          ai_api_key: string | null
+          ai_base_url: string | null
+          ai_model: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
@@ -18,11 +21,11 @@ export type Database = {
           id: string
           timezone: string | null
           updated_at: string
-          ai_model: string | null
-          ai_base_url: string | null
-          ai_api_key: string | null
         }
         Insert: {
+          ai_api_key?: string | null
+          ai_base_url?: string | null
+          ai_model?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -30,11 +33,11 @@ export type Database = {
           id: string
           timezone?: string | null
           updated_at?: string
-          ai_model?: string | null
-          ai_base_url?: string | null
-          ai_api_key?: string | null
         }
         Update: {
+          ai_api_key?: string | null
+          ai_base_url?: string | null
+          ai_model?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -42,9 +45,6 @@ export type Database = {
           id?: string
           timezone?: string | null
           updated_at?: string
-          ai_model?: string | null
-          ai_base_url?: string | null
-          ai_api_key?: string | null
         }
         Relationships: []
       }
@@ -83,6 +83,7 @@ export type Database = {
       tasks: {
         Row: {
           actual_time: number | null
+          completed: boolean
           created_at: string
           description: string | null
           due_date: string | null
@@ -93,6 +94,8 @@ export type Database = {
           parent_id: string | null
           priority: string
           project_id: string | null
+          recurrence: string
+          recurrence_end_date: string | null
           reminder_sent_at: string | null
           start_time: string | null
           status: string
@@ -103,6 +106,7 @@ export type Database = {
         }
         Insert: {
           actual_time?: number | null
+          completed?: boolean
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -113,6 +117,8 @@ export type Database = {
           parent_id?: string | null
           priority?: string
           project_id?: string | null
+          recurrence?: string
+          recurrence_end_date?: string | null
           reminder_sent_at?: string | null
           start_time?: string | null
           status?: string
@@ -123,6 +129,7 @@ export type Database = {
         }
         Update: {
           actual_time?: number | null
+          completed?: boolean
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -133,6 +140,8 @@ export type Database = {
           parent_id?: string | null
           priority?: string
           project_id?: string | null
+          recurrence?: string
+          recurrence_end_date?: string | null
           reminder_sent_at?: string | null
           start_time?: string | null
           status?: string
@@ -191,6 +200,10 @@ export type Database = {
           created_at: string
           updated_at: string
         }[]
+      }
+      handle_completed_recurring_task: {
+        Args: { task_id_arg: string }
+        Returns: undefined
       }
       search_tasks_by_tags: {
         Args: { search_tags: string[] }
