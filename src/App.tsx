@@ -15,7 +15,28 @@ import Trash from "./pages/Trash";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Keyboard } from '@capacitor/keyboard';
+
 const queryClient = new QueryClient();
+
+// Initialize Capacitor plugins
+const initializeCapacitorPlugins = async () => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await StatusBar.setStyle({ style: Style.Default });
+      // Example: Set background color if your app has a consistent header color
+      // await StatusBar.setBackgroundColor({ color: '#FFFFFF' }); // White, or your app's header color
+
+      await Keyboard.setAccessoryBarVisible({ isVisible: false }); // iOS only
+    } catch (e) {
+      console.error("Error initializing Capacitor plugins", e);
+    }
+  }
+};
+
+initializeCapacitorPlugins();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

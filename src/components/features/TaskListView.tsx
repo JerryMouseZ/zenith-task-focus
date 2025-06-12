@@ -130,8 +130,8 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
     <div className="space-y-6">
       {/* Filters */}
       <Card className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+          <div className="relative w-full sm:flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="搜索任务或标签..."
@@ -141,34 +141,36 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
             />
           </div>
           
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="状态" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">所有状态</SelectItem>
-              <SelectItem value={TaskStatus.TODO}>待办</SelectItem>
-              <SelectItem value={TaskStatus.IN_PROGRESS}>进行中</SelectItem>
-              <SelectItem value={TaskStatus.COMPLETED}>已完成</SelectItem>
-              <SelectItem value={TaskStatus.OVERDUE}>已逾期</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="w-full sm:w-auto flex gap-3 sm:gap-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[140px] min-w-0">
+                <SelectValue placeholder="状态" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">所有状态</SelectItem>
+                <SelectItem value={TaskStatus.TODO}>待办</SelectItem>
+                <SelectItem value={TaskStatus.IN_PROGRESS}>进行中</SelectItem>
+                <SelectItem value={TaskStatus.COMPLETED}>已完成</SelectItem>
+                <SelectItem value={TaskStatus.OVERDUE}>已逾期</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="优先级" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">所有优先级</SelectItem>
-              <SelectItem value={TaskPriority.HIGH}>高</SelectItem>
-              <SelectItem value={TaskPriority.MEDIUM}>中</SelectItem>
-              <SelectItem value={TaskPriority.LOW}>低</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-[140px] min-w-0">
+                <SelectValue placeholder="优先级" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">所有优先级</SelectItem>
+                <SelectItem value={TaskPriority.HIGH}>高</SelectItem>
+                <SelectItem value={TaskPriority.MEDIUM}>中</SelectItem>
+                <SelectItem value={TaskPriority.LOW}>低</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Tags className="w-4 h-4 mr-2" />
                 标签
                 {selectedTags.length > 0 && (
@@ -215,7 +217,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
 
         {/* Active tag filters display */}
         {selectedTags.length > 0 && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+          <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t">
             <span className="text-sm text-muted-foreground">已选择标签:</span>
             {selectedTags.map((tag) => (
               <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => handleTagToggle(tag)}>
@@ -229,9 +231,9 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
       {/* Task List */}
       <div className="space-y-3">
         {filteredTasks.map((task) => (
-          <Card key={task.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+          <Card key={task.id} className="p-3 sm:p-4 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => onTaskClick(task)}>
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
               <Checkbox 
                 checked={task.status === TaskStatus.COMPLETED}
                 onClick={(e) => {
@@ -239,25 +241,26 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                   handleTaskStatusToggle(task);
                 }}
                 className="mt-1"
+                aria-label={`Mark task ${task.title} as ${task.status === TaskStatus.COMPLETED ? 'incomplete' : 'complete'}`}
               />
               
               <div className="flex-1 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className={`font-medium ${task.status === TaskStatus.COMPLETED ? 'line-through text-muted-foreground' : ''}`}>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-0">
+                    <h3 className={`font-medium text-base ${task.status === TaskStatus.COMPLETED ? 'line-through text-muted-foreground' : ''}`}>
                       {task.title}
                     </h3>
                     {task.isFixedTime && (
                       <div className="flex items-center" title="固定时间任务">
-                        <Lock className="w-4 h-4 text-amber-500" />
+                        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getPriorityColor(task.priority)}>
+                  <div className="flex items-center gap-2 flex-wrap"> {/* Allow badges to wrap if needed */}
+                    <Badge className={`${getPriorityColor(task.priority)} text-xs px-1.5 py-0.5 sm:px-2 sm:py-1`}>
                       {getPriorityLabel(task.priority)}
                     </Badge>
-                    <Badge className={getStatusColor(task.status)}>
+                    <Badge className={`${getStatusColor(task.status)} text-xs px-1.5 py-0.5 sm:px-2 sm:py-1`}>
                       {getStatusLabel(task.status)}
                     </Badge>
                   </div>
@@ -269,33 +272,33 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                   </p>
                 )}
                 
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-col items-start gap-2 text-xs sm:text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-3 pt-1">
                   {task.dueDate && (
                     <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {task.dueDate.toLocaleDateString()}
                     </div>
                   )}
                   
                   {task.estimatedTime && (
                     <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
+                      <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {task.estimatedTime}分钟
                     </div>
                   )}
                   
                   {task.tags && task.tags.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Tag className="w-4 h-4" />
-                      <div className="flex gap-1">
-                        {task.tags.slice(0, 3).map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Tag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <div className="flex gap-1 flex-wrap">
+                        {task.tags.slice(0, 2).map(tag => ( // Show fewer tags on mobile by default
+                          <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0.5">
                             {tag}
                           </Badge>
                         ))}
-                        {task.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{task.tags.length - 3}
+                        {task.tags.length > 2 && (
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                            +{task.tags.length - 2}
                           </Badge>
                         )}
                       </div>

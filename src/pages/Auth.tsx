@@ -68,11 +68,11 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
+        <div className="bg-card border border-border rounded-lg p-6 shadow-lg">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground">ZenithTask</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">ZenithTask</h1>
             <p className="text-muted-foreground mt-2">
               {isLogin ? '登录到你的账户' : '创建你的账户'}
             </p>
