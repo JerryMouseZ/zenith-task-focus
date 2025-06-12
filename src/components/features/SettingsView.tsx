@@ -193,12 +193,12 @@ export const SettingsView = () => {
 
       <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
         <div className="overflow-x-auto pb-1">
-          <TabsList className="grid w-max min-w-full sm:w-full grid-cols-5"> {/* Adjusted grid columns for new tab and ensured horizontal scroll by making it w-max */}
-            <TabsTrigger value="profile" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5">Profile</TabsTrigger>
-            <TabsTrigger value="ai" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5">AI Settings</TabsTrigger>
-            <TabsTrigger value="appearance" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5">Appearance</TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5">Notifications</TabsTrigger>
-            <TabsTrigger value="privacy" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5">Privacy</TabsTrigger>
+          <TabsList className="inline-flex items-center justify-start w-max min-w-full"> {/* Use flex for natural width and scrolling */}
+            <TabsTrigger value="profile" className="text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5">Profile</TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5">AI Settings</TabsTrigger>
+            <TabsTrigger value="appearance" className="text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5">Appearance</TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5">Notifications</TabsTrigger>
+            <TabsTrigger value="privacy" className="text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5">Privacy</TabsTrigger>
           </TabsList>
         </div>
 

@@ -267,7 +267,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                 </div>
                 
                 {task.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-1 sm:line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {task.description}
                   </p>
                 )}

@@ -70,8 +70,8 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
         >
           <div className="mb-3 sm:mb-4">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">{quadrant.title}</h3>
-            <p className="text-xs sm:text-sm text-gray-600">{quadrant.description}</p>
-            <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
+            <p className="text-sm text-gray-600">{quadrant.description}</p>
+            <div className="text-xs text-gray-500 mt-0.5 sm:mt-1">
               {quadrant.tasks.length} task{quadrant.tasks.length !== 1 ? 's' : ''}
             </div>
           </div>

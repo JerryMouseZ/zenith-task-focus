@@ -6,6 +6,16 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https'
+  },
+  plugins: {
+    StatusBar: {
+      style: 'DEFAULT', // Can be 'DARK' or 'LIGHT' too
+    },
+    Keyboard: {
+      resize: 'body', // Or 'ionic', 'native'
+      style: 'DEFAULT', // Or 'DARK'
+      resizeOnFullScreen: true,
+    }
   }
 };
 

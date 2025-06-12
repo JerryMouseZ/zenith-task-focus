@@ -52,7 +52,7 @@ export const Sidebar = ({ onNewTask, isOpen, onClose }: SidebarProps) => {
           <h1 className="text-xl font-bold text-foreground">ZenithTask</h1>
           {isMobile && (
             <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close sidebar">
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </Button>
           )}
         </div>

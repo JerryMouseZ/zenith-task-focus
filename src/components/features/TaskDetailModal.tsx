@@ -362,7 +362,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
                       });
                     }}
                     placeholder="天"
-                    className="w-full sm:w-20 text-xs sm:text-sm"
+                    className="w-24 sm:w-20 text-xs sm:text-sm"
                   />
                   <span className="text-xs sm:text-sm">天</span>
                 </div>
@@ -382,7 +382,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
                       });
                     }}
                     placeholder="小时"
-                    className="w-full sm:w-20 text-xs sm:text-sm"
+                    className="w-24 sm:w-20 text-xs sm:text-sm"
                   />
                   <span className="text-xs sm:text-sm">小时</span>
                 </div>
@@ -443,12 +443,12 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
             </label>
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2">
               {(editedTask.tags || []).map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
-                  <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <Badge key={tag} variant="secondary" className="flex items-center gap-1 text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                  <Tag className="w-3 h-3" />
                   {tag}
                   {isEditing && (
                     <X 
-                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 cursor-pointer hover:text-red-500 ml-0.5 sm:ml-1"
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 cursor-pointer hover:text-red-500 ml-1 sm:ml-1.5"
                       onClick={() => handleRemoveTag(tag)}
                     />
                   )}
@@ -485,7 +485,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
                   <div key={childTask.id} className="flex items-center gap-2 p-1.5 sm:p-2 border rounded text-xs sm:text-sm">
                     <Circle className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                     <span className="flex-1 truncate">{childTask.title}</span>
-                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5">
+                    <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                       {childTask.status === TaskStatus.TODO && "待办"}
                       {childTask.status === TaskStatus.IN_PROGRESS && "进行中"}
                       {childTask.status === TaskStatus.COMPLETED && "已完成"}
