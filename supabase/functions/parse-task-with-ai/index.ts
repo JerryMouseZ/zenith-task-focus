@@ -36,7 +36,7 @@ serve(async (req) => {
 - 如果指定了时间段，则同时填充 startTime 和 endTime
 - 从文本中提取人名、项目名、地点等作为 tags
 
-返回严格的 JSON 格式，不要包含任何其他文本。`;
+只返回JSON对象，不要包含任何其他文本、解释或格式化标记。确保返回的是有效的JSON格式。`;
 
     const response = await fetch(`${aiConfig.baseUrl}/v1/chat/completions`, {
       method: 'POST',
@@ -50,7 +50,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.3,
+        temperature: 0.1,
         max_tokens: 1000
       }),
     });
@@ -60,28 +60,83 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    let content = data.choices[0].message.content;
+    
+    console.log('Raw AI response:', content);
+    
+    // Clean up the response to extract JSON
+    content = content.trim();
+    
+    // Remove any markdown code block formatting
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    // Find JSON content between braces
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      content = jsonMatch[0];
+    }
+    
+    console.log('Cleaned content for parsing:', content);
     
     // Parse the JSON response from AI
     let parsedTask;
     try {
       parsedTask = JSON.parse(content);
-    } catch (error) {
-      throw new Error('Failed to parse AI response as JSON');
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Content that failed to parse:', content);
+      
+      // Fallback: try to create a basic task from the prompt
+      parsedTask = {
+        title: prompt.substring(0, 100),
+        description: prompt.length > 100 ? prompt : null,
+        priority: 'medium',
+        tags: [],
+        isFixedTime: false
+      };
+    }
+
+    // Validate and set defaults for required fields
+    if (!parsedTask.title) {
+      parsedTask.title = prompt.substring(0, 100);
+    }
+    if (!parsedTask.priority) {
+      parsedTask.priority = 'medium';
+    }
+    if (!parsedTask.tags) {
+      parsedTask.tags = [];
+    }
+    if (parsedTask.isFixedTime === undefined) {
+      parsedTask.isFixedTime = false;
     }
 
     // Convert string dates to Date objects for consistency
     if (parsedTask.dueDate) {
-      parsedTask.dueDate = new Date(parsedTask.dueDate);
+      try {
+        parsedTask.dueDate = new Date(parsedTask.dueDate);
+      } catch (e) {
+        console.error('Invalid dueDate format:', parsedTask.dueDate);
+        parsedTask.dueDate = null;
+      }
     }
     if (parsedTask.startTime) {
-      parsedTask.startTime = new Date(parsedTask.startTime);
+      try {
+        parsedTask.startTime = new Date(parsedTask.startTime);
+      } catch (e) {
+        console.error('Invalid startTime format:', parsedTask.startTime);
+        parsedTask.startTime = null;
+      }
     }
     if (parsedTask.endTime) {
-      parsedTask.endTime = new Date(parsedTask.endTime);
+      try {
+        parsedTask.endTime = new Date(parsedTask.endTime);
+      } catch (e) {
+        console.error('Invalid endTime format:', parsedTask.endTime);
+        parsedTask.endTime = null;
+      }
     }
 
-    console.log('Parsed task:', parsedTask);
+    console.log('Final parsed task:', parsedTask);
 
     return new Response(JSON.stringify({ success: true, task: parsedTask }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
