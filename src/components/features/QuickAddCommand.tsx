@@ -21,7 +21,7 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [parsedTask, setParsedTask] = useState<Partial<Task> | null>(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
   const { profile } = useProfile();
 
   const handleParseTask = async () => {
@@ -57,7 +57,7 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
           priority: data.task.priority as TaskPriority,
         };
         setParsedTask(task);
-        setShowTaskModal(true);
+        setShowTaskForm(true);
         onClose();
       } else {
         throw new Error(data.error);
@@ -77,8 +77,8 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
     }
   };
 
-  const handleCloseTaskModal = () => {
-    setShowTaskModal(false);
+  const handleCloseTaskForm = () => {
+    setShowTaskForm(false);
     setParsedTask(null);
     setPrompt("");
   };
@@ -126,9 +126,10 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
 
       {parsedTask && (
         <TaskDetailModal
-          task={parsedTask as Task}
-          isOpen={showTaskModal}
-          onClose={handleCloseTaskModal}
+          task={null}
+          initialTask={parsedTask}
+          isOpen={showTaskForm}
+          onClose={handleCloseTaskForm}
         />
       )}
     </>
