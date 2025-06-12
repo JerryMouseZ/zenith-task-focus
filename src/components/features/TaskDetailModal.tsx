@@ -16,9 +16,10 @@ interface TaskDetailModalProps {
   task: Task | null;
   isOpen: boolean;
   onClose: () => void;
+  initialTask?: Partial<Task>;
 }
 
-export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailModalProps & { parentId?: string }) => {
+export const TaskDetailModal = ({ task, isOpen, onClose, parentId, initialTask }: TaskDetailModalProps & { parentId?: string }) => {
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [newTag, setNewTag] = useState("");
@@ -47,6 +48,25 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
         // 初始化天和小时
         setEstimatedDays(task.estimatedTime ? Math.floor(task.estimatedTime / 1440) : 0);
         setEstimatedHours(task.estimatedTime ? Math.floor((task.estimatedTime % 1440) / 60) : 0);
+      } else if (initialTask) {
+        setEditedTask({
+          ...{
+            title: "",
+            description: "",
+            priority: TaskPriority.MEDIUM,
+            status: TaskStatus.TODO,
+            tags: [],
+            subtasks: [],
+            isFixedTime: false,
+            parentId: parentId || undefined,
+            recurrence: 'none',
+            recurrence_end_date: undefined,
+          },
+          ...initialTask
+        });
+        setEstimatedDays(initialTask.estimatedTime ? Math.floor(initialTask.estimatedTime / 1440) : 0);
+        setEstimatedHours(initialTask.estimatedTime ? Math.floor((initialTask.estimatedTime % 1440) / 60) : 0);
+        setIsEditing(true);
       } else {
         // New task
         setEditedTask({
@@ -68,7 +88,7 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId }: TaskDetailM
     } else {
       setIsEditing(false);
     }
-  }, [task, isOpen, parentId]);
+  }, [task, isOpen, parentId, initialTask]);
 
   const handleSave = async () => {
     if (!editedTask.title?.trim()) {

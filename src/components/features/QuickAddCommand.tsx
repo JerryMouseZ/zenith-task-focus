@@ -44,17 +44,24 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
             apiKey: profile.ai_api_key,
             baseUrl: profile.ai_base_url,
             model: profile.ai_model
-          }
+          },
+          timezone: profile?.timezone // 只传递设置中的时区，不再 fallback '+08:00'
         }
       });
 
       if (error) throw error;
 
       if (data.success) {
+        // 修正日期字段类型
+        const fixDate = (v: any) => (typeof v === 'string' ? new Date(v) : v);
         const task = {
           ...data.task,
           status: TaskStatus.TODO,
           priority: data.task.priority as TaskPriority,
+          startTime: data.task.startTime ? fixDate(data.task.startTime) : undefined,
+          dueDate: data.task.dueDate ? fixDate(data.task.dueDate) : undefined,
+          endTime: data.task.endTime ? fixDate(data.task.endTime) : undefined,
+          recurrence_end_date: data.task.recurrence_end_date ? fixDate(data.task.recurrence_end_date) : undefined,
         };
         setParsedTask(task);
         setShowTaskForm(true);
