@@ -6,9 +6,10 @@ import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
   onNewTask: () => void;
+  onQuickAdd?: () => void;
 }
 
-export const Sidebar = ({ onNewTask }: SidebarProps) => {
+export const Sidebar = ({ onNewTask, onQuickAdd }: SidebarProps) => {
   const location = useLocation();
 
   const menuItems = [
@@ -32,6 +33,8 @@ export const Sidebar = ({ onNewTask }: SidebarProps) => {
           <Input 
             placeholder="搜索任务" 
             className="pl-10 bg-muted/50"
+            onClick={onQuickAdd}
+            readOnly
           />
         </div>
         
