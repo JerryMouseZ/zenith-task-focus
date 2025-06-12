@@ -1,5 +1,4 @@
-
-import { Calendar, Inbox, List, Clock, CheckCircle, Trash, Search, BarChart3, Settings } from "lucide-react";
+import { Calendar, Inbox, List, Clock, CheckCircle, Trash, Search, BarChart3, Settings, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation } from "react-router-dom";
@@ -33,17 +32,26 @@ export const Sidebar = ({ onNewTask, onQuickAdd }: SidebarProps) => {
           <Input 
             placeholder="搜索任务" 
             className="pl-10 bg-muted/50"
-            onClick={onQuickAdd}
-            readOnly
           />
         </div>
         
-        <Button 
-          onClick={onNewTask}
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium"
-        >
-          新建任务
-        </Button>
+        <div className="space-y-2">
+          <Button 
+            onClick={onNewTask}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium"
+          >
+            新建任务
+          </Button>
+          
+          <Button 
+            onClick={onQuickAdd}
+            variant="outline"
+            className="w-full border-blue-200 hover:bg-blue-50 text-blue-700 font-medium"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            智能添加
+          </Button>
+        </div>
       </div>
 
       <nav className="flex-1 p-4">
