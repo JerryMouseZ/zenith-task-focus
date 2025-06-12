@@ -9,7 +9,7 @@ interface CalendarViewProps {
   onTaskClick: (task: Task) => void;
 }
 
-type ViewMode = "day" | "week";
+type ViewMode = "day" | "week" | "month";
 
 type CalendarMode = "start" | "due"; // 新增：区分开始/截止时间视图
 
@@ -165,31 +165,43 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
               {day.getDate()}
             </div>
             <div className="space-y-1">
-              {scheduledTasks
-                .filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString())
+              {filteredTasks
+                .filter(task => {
+                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                  return date && date.toDateString() === day.toDateString();
+                })
                 .slice(0, 3)
                 .map(task => {
-                  const isOverdue = task.dueDate && task.dueDate < new Date() && task.status !== TaskStatus.COMPLETED;
+                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                  const isOver = date && date < new Date() && task.status !== TaskStatus.COMPLETED;
                   return (
                     <div
                       key={task.id}
                       onClick={() => onTaskClick(task)}
                       className={`text-xs px-1 py-0.5 rounded cursor-pointer hover:opacity-80 ${
-                        isOverdue 
-                          ? 'bg-red-100 text-red-800 border border-red-300' 
+                        isOver
+                          ? 'bg-red-100 text-red-800 border border-red-300'
                           : 'bg-orange-100 text-orange-800 border border-orange-300'
                       }`}
                     >
                       <div className="truncate font-medium">{task.title}</div>
                       <div className="text-xs opacity-75">
-                        Due: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        {calendarMode === "start"
+                          ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+                          : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>
                   );
                 })}
-              {scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length > 3 && (
+              {filteredTasks.filter(task => {
+                const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                return date && date.toDateString() === day.toDateString();
+              }).length > 3 && (
                 <div className="text-xs text-muted-foreground">
-                  +{scheduledTasks.filter(task => task.dueDate && task.dueDate.toDateString() === day.toDateString()).length - 3} 更多
+                  +{filteredTasks.filter(task => {
+                    const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                    return date && date.toDateString() === day.toDateString();
+                  }).length - 3} 更多
                 </div>
               )}
             </div>
@@ -247,7 +259,14 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             >
               周视图
             </Button>
-
+            <Button
+              variant={viewMode === "month" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("month")}
+              className={viewMode === "month" ? "bg-green-50 text-green-700" : ""}
+            >
+              月视图
+            </Button>
           </div>
         </div>
       </div>
@@ -268,7 +287,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
       <Card className="p-4">
         {viewMode === "day" && renderDayView()}
         {viewMode === "week" && renderWeekView()}
-
+        {viewMode === "month" && renderMonthView()}
       </Card>
     </div>
   );
