@@ -18,6 +18,9 @@ export type Database = {
           id: string
           timezone: string | null
           updated_at: string
+          ai_model: string | null
+          ai_base_url: string | null
+          ai_api_key: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -27,6 +30,9 @@ export type Database = {
           id: string
           timezone?: string | null
           updated_at?: string
+          ai_model?: string | null
+          ai_base_url?: string | null
+          ai_api_key?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -36,6 +42,9 @@ export type Database = {
           id?: string
           timezone?: string | null
           updated_at?: string
+          ai_model?: string | null
+          ai_base_url?: string | null
+          ai_api_key?: string | null
         }
         Relationships: []
       }
