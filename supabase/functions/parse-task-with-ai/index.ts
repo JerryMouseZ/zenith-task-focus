@@ -30,16 +30,24 @@ serve(async (req) => {
     - isFixedTime: 布尔值，如果指定了具体时间则为true
     - priority: 从 'high', 'medium', 'low' 中选择，默认为 'medium'
     - tags: 字符串数组，从文本中提取人名、项目名等
-    
+    - estimatedTime: 数字，从文本中提取的预估时长（单位：分钟）（可选）
+    - recurrence: 字符串，从 'none', 'daily', 'weekly', 'monthly' 中选择，默认为 'none'。
+    - recurrence_end_date: ISO 8601 格式的循环截止日期（可选，必须为UTC时间，带Z后缀）
+
     解析规则：
     - 当前用户时区为 '${userTimezone}'，请将所有解析到的时间都转换为 UTC（ISO 8601，带Z后缀）后返回
+    - 如果文本中包含“每天”、“每日”等词语，将 recurrence 设为 'daily'。
+    - 如果文本中包含“每周”、“周常”等词语，将 recurrence 设为 'weekly'。
+    - 如果文本中包含“每月”、“月度”等词语，将 recurrence 设为 'monthly'。
+    - 如果文本中指定了循环截止条件（如“到7月之前”、“直到下个月”），请解析为具体的截止日期并填充到 recurrence_end_date 字段。
+    - 如果文本中包含“预计”、“耗时”、“大概”等描述时长（如“2小时”、“30分钟”）的词语，请解析为总分钟数并填充到 estimatedTime 字段。例如，“预计2小时”应解析为 120。
     - 如果文本中包含"紧急"、"重要"、"优先"等词语，将 priority 设为 'high'
     - 如果文本中包含日期或时间，请基于当前时间 '${currentTime}' 和用户时区 '${userTimezone}' 转换为完整的 UTC ISO 8601 格式
     - 如果是"在什么时间之前完成"，则填充 dueDate
     - 如果是"在什么时间开始"或具体时间安排，则填充 startTime 并将 isFixedTime 设为 true
     - 如果指定了时间段，则同时填充 startTime 和 endTime
     - 从文本中提取人名、项目名、地点等作为 tags
-    
+
     只返回JSON对象，不要包含任何其他文本、解释或格式化标记。确保返回的是有效的JSON格式。`;
 
     const response = await fetch(`${aiConfig.baseUrl}/v1/chat/completions`, {
