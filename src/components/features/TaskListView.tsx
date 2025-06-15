@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Search, Plus, Calendar, Clock, Tag, Tags, Lock } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
+import { SmartScheduleButton } from "./SmartScheduleButton";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
@@ -260,6 +260,8 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                     <Badge className={getStatusColor(task.status)}>
                       {getStatusLabel(task.status)}
                     </Badge>
+                    {/* 智能调度按钮 */}
+                    <SmartScheduleButton task={task} />
                   </div>
                 </div>
                 
