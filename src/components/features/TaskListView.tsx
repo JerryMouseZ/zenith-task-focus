@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Calendar, Clock, Tag, Tags, Lock } from "lucide-react";
+import { Search, Plus, Calendar, Clock, Tag, Tags, Lock, Brain, Loader2 } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
 import { SmartScheduleButton } from "./SmartScheduleButton";
+import { toast } from "sonner";
+import { useProfile } from "@/hooks/useProfile";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
@@ -20,8 +22,11 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [batchLoading, setBatchLoading] = useState(false);
 
   const { tasks, isLoading, updateTask } = useTasks();
+  const { profile } = useProfile();
+  const user_id = profile?.id;
 
   // Get all unique tags from tasks
   const allTags = Array.from(new Set(tasks.flatMap(task => task.tags)));
@@ -118,6 +123,73 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
     }
   };
 
+  // 批量调度所有任务的函数
+  const handleBatchSmartSchedule = async () => {
+    if (!user_id) {
+      toast.error("请先登录后再批量调度任务！");
+      return;
+    }
+    setBatchLoading(true);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const task of filteredTasks) {
+      try {
+        const res = await fetch(
+          "https://tvbeublfxllikjdcmhuy.supabase.co/functions/v1/smart-task-schedule",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: user_id,
+              task_id: task.id,
+              title: task.title,
+              description: task.description,
+              due_date: task.dueDate?.toISOString(),
+              estimated_time: task.estimatedTime,
+              isFixedTime: task.isFixedTime,
+            }),
+          }
+        );
+        const data = await res.json();
+        if (!res.ok) {
+          failCount++;
+          toast.error(
+            <div>
+              任务「{task.title}」调度失败：{data.error}
+              {data.debug && (
+                <details className="text-xs text-red-600 mt-2">
+                  <summary>查看调试信息</summary>
+                  <pre className="whitespace-pre-wrap">{JSON.stringify(data.debug, null, 2)}</pre>
+                </details>
+              )}
+            </div>
+          );
+        } else {
+          successCount++;
+          toast.success(
+            <div>
+              <div>已成功为「{task.title}」生成 <b>{data.created_blocks?.filter((b:any) => b.type==="focus").length || 0}</b> 个专注块！</div>
+              {data.created_blocks?.length > 0 && (
+                <details className="text-xs mt-1">
+                  <summary>查看分配详情</summary>
+                  <pre className="whitespace-pre-wrap">{JSON.stringify(data.created_blocks, null, 2)}</pre>
+                </details>
+              )}
+            </div>
+          );
+        }
+      } catch (err: any) {
+        failCount++;
+        toast.error("网络错误或服务异常，无法调度任务「" + task.title + "」");
+      }
+    }
+
+    toast.info(`全部调度完成（成功 ${successCount} 个，失败 ${failCount} 个）`);
+    setBatchLoading(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -128,7 +200,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
+      {/* Filters 与批量智能调度按钮 */}
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
@@ -140,6 +212,22 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
               className="pl-10"
             />
           </div>
+          {/* 新增：全部智能调度按钮 */}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={handleBatchSmartSchedule}
+            disabled={batchLoading || filteredTasks.length === 0}
+            title="为当前列表的所有任务执行智能调度"
+          >
+            {batchLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Brain className="w-4 h-4" />
+            )}
+            全部智能调度
+          </Button>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px]">
