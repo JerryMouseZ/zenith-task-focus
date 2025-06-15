@@ -63,6 +63,50 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_blocks: {
+        Row: {
+          actual_end_time: string | null
+          created_at: string
+          end_time: string
+          id: string
+          start_time: string
+          status: string
+          task_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actual_end_time?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          start_time: string
+          status?: string
+          task_id: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          actual_end_time?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          status?: string
+          task_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_blocks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subtasks: {
         Row: {
           completed: boolean

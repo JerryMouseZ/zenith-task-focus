@@ -1,7 +1,7 @@
-
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { SettingsView } from "@/components/features/SettingsView";
+import { WorkPreferencesForm } from "@/components/features/settings/WorkPreferencesForm";
 
 const Settings = () => {
   const handleNewTask = () => {
@@ -14,7 +14,10 @@ const Settings = () => {
       <div className="flex-1 flex flex-col">
         <Header />
         <main className="flex-1 p-6">
-          <SettingsView />
+          <div className="flex flex-col gap-8">
+            <SettingsView />
+            <WorkPreferencesForm />
+          </div>
         </main>
       </div>
     </div>
