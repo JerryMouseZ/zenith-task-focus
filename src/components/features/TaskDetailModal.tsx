@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -173,6 +172,14 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId, initialTask }
     { value: TaskPriority.HIGH, label: "高" }
   ];
 
+  // 新增：详情页直接勾选“标记为已完成”
+  const handleToggleCompleted = (checked: boolean) => {
+    if (task) {
+      updateTask({ id: task.id, updates: { completed: checked } });
+      setEditedTask(prev => ({ ...prev, completed: checked }));
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -212,8 +219,13 @@ export const TaskDetailModal = ({ task, isOpen, onClose, parentId, initialTask }
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <Checkbox
                 checked={!!editedTask.completed}
-                onCheckedChange={checked => isEditing && setEditedTask({ ...editedTask, completed: !!checked })}
-                disabled={!isEditing}
+                // 编辑时保持旧逻辑，否则立即更新
+                onCheckedChange={checked =>
+                  isEditing
+                    ? setEditedTask({ ...editedTask, completed: !!checked })
+                    : handleToggleCompleted(!!checked)
+                }
+                disabled={isCreating || isUpdating || isDeleting}
               />
               标记为已完成
             </label>
