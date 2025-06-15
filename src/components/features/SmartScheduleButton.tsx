@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2, Brain } from "lucide-react";
 import { Task } from "@/types/task";
-import { useUser } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
 
 interface SmartScheduleButtonProps {
   task: Task;
@@ -13,8 +13,8 @@ interface SmartScheduleButtonProps {
 
 export const SmartScheduleButton = ({ task, className }: SmartScheduleButtonProps) => {
   const [loading, setLoading] = useState(false);
-  const user = useUser();
-  const user_id = user?.id;
+  const { profile } = useProfile();
+  const user_id = profile?.id;
 
   const handleSchedule = async () => {
     if (!user_id) {
