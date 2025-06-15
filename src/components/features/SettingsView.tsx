@@ -10,6 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Brain, Palette, Bell, Shield, UserCircle } from "lucide-react";
 import { getUserTimezone } from '@/utils/timezoneUtils';
+import { ProfileSettingsForm } from "./settings/ProfileSettingsForm";
+import { AISettingsForm } from "./settings/AISettingsForm";
+import { AppearanceSettingsForm } from "./settings/AppearanceSettingsForm";
+import { NotificationsSettingsForm } from "./settings/NotificationsSettingsForm";
+import { PrivacySettingsForm } from "./settings/PrivacySettingsForm";
 
 export const SettingsView = () => {
   const [baseUrl, setBaseUrl] = useState("");
@@ -202,7 +207,6 @@ export const SettingsView = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Settings</h1>
-        {/* This button could be made context-aware based on the active tab or removed if each tab has its own save */}
         <Button onClick={handleSaveProfile} className="bg-green-500 hover:bg-green-600" disabled={isLoadingProfile || isSavingProfile}>
           <Save className="w-4 h-4 mr-2" />
           {isSavingProfile ? 'Saving...' : 'Save Settings'}
@@ -229,94 +233,25 @@ export const SettingsView = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" value={profile?.full_name || ''} disabled placeholder="Loading..." />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={profile?.email || ''} disabled placeholder="Loading..." />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timezone-select">时区</Label>
-                <select
-                  id="timezone-select"
-                  className="w-full border rounded px-3 py-2"
-                  value={selectedTimeZone}
-                  onChange={e => setSelectedTimeZone(e.target.value)}
-                  disabled={isLoadingProfile}
-                >
-                  <option value="" disabled>选择你的时区</option>
-                  {timeZoneOptions.map(tz => (
-                    <option key={tz.value} value={tz.value}>{tz.label}</option>
-                  ))}
-                </select>
-                <p className="text-sm text-muted-foreground">
-                  请选择本地时区以获得准确的任务提醒与日程安排
-                </p>
-              </div>
-              {/* 新增：工作偏好设置 */}
-              <Separator />
-              <h4 className="font-medium text-base mb-2 mt-4">工作偏好设定</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="workStartTime">每日工作开始</Label>
-                  <Input
-                    id="workStartTime"
-                    type="time"
-                    value={workStartTime}
-                    onChange={e => setWorkStartTime(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="workEndTime">每日工作结束</Label>
-                  <Input
-                    id="workEndTime"
-                    type="time"
-                    value={workEndTime}
-                    onChange={e => setWorkEndTime(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="focusDuration">专注时长 (分钟)</Label>
-                  <Input
-                    id="focusDuration"
-                    type="number"
-                    min={10}
-                    max={180}
-                    step={5}
-                    value={focusDuration}
-                    onChange={e => setFocusDuration(Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="breakDuration">休息时间 (分钟)</Label>
-                  <Input
-                    id="breakDuration"
-                    type="number"
-                    min={5}
-                    max={60}
-                    step={1}
-                    value={breakDuration}
-                    onChange={e => setBreakDuration(Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="bufferMinutes">任务间缓冲时间 (分钟)</Label>
-                  <Input
-                    id="bufferMinutes"
-                    type="number"
-                    min={0}
-                    max={60}
-                    step={1}
-                    value={bufferMinutes}
-                    onChange={e => setBufferMinutes(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-              <Button onClick={handleSaveProfile} disabled={isLoadingProfile || isSavingProfile}>
-                {isSavingProfile ? '保存中...' : '保存设置'}
-              </Button>
+              <ProfileSettingsForm
+                profile={profile}
+                workStartTime={workStartTime}
+                setWorkStartTime={setWorkStartTime}
+                workEndTime={workEndTime}
+                setWorkEndTime={setWorkEndTime}
+                focusDuration={focusDuration}
+                setFocusDuration={setFocusDuration}
+                breakDuration={breakDuration}
+                setBreakDuration={setBreakDuration}
+                bufferMinutes={bufferMinutes}
+                setBufferMinutes={setBufferMinutes}
+                selectedTimeZone={selectedTimeZone}
+                setSelectedTimeZone={setSelectedTimeZone}
+                timeZoneOptions={timeZoneOptions}
+                isLoadingProfile={isLoadingProfile}
+                handleSaveProfile={handleSaveProfile}
+                isSavingProfile={isSavingProfile}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -333,77 +268,14 @@ export const SettingsView = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="model">AI Model</Label>
-                <Input
-                  id="model"
-                  type="text"
-                  placeholder="e.g. gemini-flash-preview-05-20, gpt-4, llama-3, etc."
-                  value={selectedModel}
-                  onChange={e => setSelectedModel(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Enter any model name supported by your provider. Default: gemini-flash-preview-05-20
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="baseUrl">OpenAI-Compatible Base URL (Optional)</Label>
-                <Input
-                  id="baseUrl"
-                  type="url"
-                  placeholder="https://api.openai.com/v1 or your custom endpoint"
-                  value={baseUrl}
-                  onChange={e => setBaseUrl(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Leave empty to use the default endpoint. For custom providers, enter their OpenAI-compatible API base URL.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  placeholder="Enter your API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Your API key is stored securely and encrypted.
-                </p>
-              </div>
-
-              {/* Separator and AI Features remain as they were, no changes needed here for profile */}
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">AI Features</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Task Breakdown</p>
-                      <p className="text-sm text-muted-foreground">Let AI break down complex tasks.</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Smart Scheduling</p>
-                      <p className="text-sm text-muted-foreground">AI-powered schedule planning.</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Energy Prediction</p>
-                      <p className="text-sm text-muted-foreground">Predict and track energy levels.</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-              </div>
+              <AISettingsForm
+                selectedModel={selectedModel}
+                setSelectedModel={setSelectedModel}
+                baseUrl={baseUrl}
+                setBaseUrl={setBaseUrl}
+                apiKey={apiKey}
+                setApiKey={setApiKey}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -420,49 +292,7 @@ export const SettingsView = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Dark Mode</p>
-                  <p className="text-sm text-muted-foreground">Toggle dark theme</p>
-                </div>
-                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label>Theme Color</Label>
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 bg-green-500 rounded-md border-2 border-green-600 cursor-pointer"></div>
-                  <div className="w-8 h-8 bg-blue-500 rounded-md border cursor-pointer"></div>
-                  <div className="w-8 h-8 bg-purple-500 rounded-md border cursor-pointer"></div>
-                  <div className="w-8 h-8 bg-orange-500 rounded-md border cursor-pointer"></div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fontSize">Font Size</Label>
-                <select
-                  id="fontSize"
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="density">Display Density</Label>
-                <select
-                  id="density"
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="compact">Compact</option>
-                  <option value="comfortable">Comfortable</option>
-                  <option value="spacious">Spacious</option>
-                </select>
-              </div>
+              <AppearanceSettingsForm darkMode={darkMode} setDarkMode={setDarkMode} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -479,56 +309,10 @@ export const SettingsView = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Enable Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive push notifications</p>
-                </div>
-                <Switch checked={notifications} onCheckedChange={setNotifications} />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Notification Types</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Task Reminders</p>
-                      <p className="text-sm text-muted-foreground">Notify before task deadlines</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Daily Summary</p>
-                      <p className="text-sm text-muted-foreground">Daily progress recap</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">AI Suggestions</p>
-                      <p className="text-sm text-muted-foreground">AI-powered productivity tips</p>
-                    </div>
-                    <Switch />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label>Quiet Hours</Label>
-                <div className="flex gap-2">
-                  <Input type="time" defaultValue="22:00" className="flex-1" />
-                  <span className="self-center text-sm text-muted-foreground">to</span>
-                  <Input type="time" defaultValue="08:00" className="flex-1" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  No notifications during these hours
-                </p>
-              </div>
+              <NotificationsSettingsForm
+                notifications={notifications}
+                setNotifications={setNotifications}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -545,60 +329,7 @@ export const SettingsView = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Data Collection</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Analytics</p>
-                      <p className="text-sm text-muted-foreground">Help improve the app with usage data</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Error Reporting</p>
-                      <p className="text-sm text-muted-foreground">Automatically report crashes and errors</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Data Management</h4>
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start">
-                    Export All Data
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    Download Privacy Report
-                  </Button>
-                  <Button variant="destructive" className="w-full justify-start">
-                    Delete All Data
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label>Data Retention</Label>
-                <select
-                  id="dataRetention"
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="30days">30 Days</option>
-                  <option value="6months">6 Months</option>
-                  <option value="1year">1 Year</option>
-                  <option value="forever">Forever</option>
-                </select>
-                <p className="text-sm text-muted-foreground">
-                  How long to keep completed tasks and analytics data
-                </p>
-              </div>
+              <PrivacySettingsForm />
             </CardContent>
           </Card>
         </TabsContent>
