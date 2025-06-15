@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Define Profile Interface
@@ -13,6 +12,13 @@ export interface Profile {
   ai_api_key?: string | null;
   created_at: Date;
   updated_at: Date;
+
+  // 新增：工作偏好相关字段
+  work_start_time?: string | null;
+  work_end_time?: string | null;
+  focus_duration_minutes?: number | null;
+  break_duration_minutes?: number | null;
+  planning_buffer_minutes?: number | null;
 }
 
 // Function to fetch the current user's profile
