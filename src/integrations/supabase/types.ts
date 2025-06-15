@@ -15,36 +15,51 @@ export type Database = {
           ai_base_url: string | null
           ai_model: string | null
           avatar_url: string | null
+          break_duration_minutes: number | null
           created_at: string
           email: string | null
+          focus_duration_minutes: number | null
           full_name: string | null
           id: string
+          planning_buffer_minutes: number | null
           timezone: string | null
           updated_at: string
+          work_end_time: string | null
+          work_start_time: string | null
         }
         Insert: {
           ai_api_key?: string | null
           ai_base_url?: string | null
           ai_model?: string | null
           avatar_url?: string | null
+          break_duration_minutes?: number | null
           created_at?: string
           email?: string | null
+          focus_duration_minutes?: number | null
           full_name?: string | null
           id: string
+          planning_buffer_minutes?: number | null
           timezone?: string | null
           updated_at?: string
+          work_end_time?: string | null
+          work_start_time?: string | null
         }
         Update: {
           ai_api_key?: string | null
           ai_base_url?: string | null
           ai_model?: string | null
           avatar_url?: string | null
+          break_duration_minutes?: number | null
           created_at?: string
           email?: string | null
+          focus_duration_minutes?: number | null
           full_name?: string | null
           id?: string
+          planning_buffer_minutes?: number | null
           timezone?: string | null
           updated_at?: string
+          work_end_time?: string | null
+          work_start_time?: string | null
         }
         Relationships: []
       }

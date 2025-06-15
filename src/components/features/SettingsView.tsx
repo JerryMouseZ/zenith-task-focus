@@ -25,6 +25,13 @@ export const SettingsView = () => {
   const [isSavingProfile, setIsSavingProfile] = useState<boolean>(false);
   const { toast } = useToast();
 
+  // 新增：工作偏好/时间相关字段
+  const [workStartTime, setWorkStartTime] = useState<string>('09:00');
+  const [workEndTime, setWorkEndTime] = useState<string>('18:00');
+  const [focusDuration, setFocusDuration] = useState<number>(45);
+  const [breakDuration, setBreakDuration] = useState<number>(15);
+  const [bufferMinutes, setBufferMinutes] = useState<number>(10);
+
   // Generate time zone options with fallback for older environments
   const timeZoneOptions = React.useMemo(() => {
     const userTimezone = getUserTimezone();
@@ -97,6 +104,12 @@ export const SettingsView = () => {
           setSelectedModel(profileData.ai_model || "gemini-flash-preview-05-20");
           setBaseUrl(profileData.ai_base_url || "");
           setApiKey(profileData.ai_api_key || "");
+          // 初始化：工作偏好字段
+          setWorkStartTime(profileData.work_start_time ? profileData.work_start_time.substring(0,5) : '09:00');
+          setWorkEndTime(profileData.work_end_time ? profileData.work_end_time.substring(0,5) : '18:00');
+          setFocusDuration(profileData.focus_duration_minutes || 45);
+          setBreakDuration(profileData.break_duration_minutes || 15);
+          setBufferMinutes(profileData.planning_buffer_minutes || 10);
         } else {
           // Set default timezone if no profile
           setSelectedTimeZone(getUserTimezone());
@@ -150,30 +163,35 @@ export const SettingsView = () => {
     }
   };
 
+  // 保存用户档案，包括工作偏好
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
     try {
-      const updatedProfile = await profileService.updateProfile({ 
+      const updatedProfile = await profileService.updateProfile({
         timezone: selectedTimeZone,
         ai_model: selectedModel,
         ai_base_url: baseUrl,
-        ai_api_key: apiKey
+        ai_api_key: apiKey,
+        work_start_time: workStartTime + ':00+08', // 转化为 time with tz 格式
+        work_end_time: workEndTime + ':00+08',
+        focus_duration_minutes: focusDuration,
+        break_duration_minutes: breakDuration,
+        planning_buffer_minutes: bufferMinutes
       });
-      
       if (updatedProfile) {
         setProfile(updatedProfile);
-        toast({ 
-          title: 'Success', 
+        toast({
+          title: 'Success',
           description: 'Profile updated successfully.',
           variant: 'default'
         });
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast({ 
-        title: 'Error', 
+      toast({
+        title: 'Error',
         description: 'Failed to update profile. Please try again.',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     } finally {
       setIsSavingProfile(false);
@@ -185,15 +203,14 @@ export const SettingsView = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Settings</h1>
         {/* This button could be made context-aware based on the active tab or removed if each tab has its own save */}
-        <Button onClick={handleSaveGeneralSettings} className="bg-green-500 hover:bg-green-600">
+        <Button onClick={handleSaveProfile} className="bg-green-500 hover:bg-green-600" disabled={isLoadingProfile || isSavingProfile}>
           <Save className="w-4 h-4 mr-2" />
-          Save General Settings
+          {isSavingProfile ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
-
-      <Tabs defaultValue="profile" className="space-y-6"> {/* Changed default to profile */}
-        <TabsList className="grid w-full grid-cols-5"> {/* Adjusted grid columns for new tab */}
-          <TabsTrigger value="profile">Profile</TabsTrigger> {/* New Profile Tab */}
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="ai">AI Settings</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -208,7 +225,7 @@ export const SettingsView = () => {
                 User Profile
               </CardTitle>
               <CardDescription>
-                Manage your profile settings, including time zone.
+                管理你的个人信息和工作偏好
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -221,25 +238,84 @@ export const SettingsView = () => {
                 <Input id="email" type="email" value={profile?.email || ''} disabled placeholder="Loading..." />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="timezone-select">Time Zone</Label>
+                <Label htmlFor="timezone-select">时区</Label>
                 <select
-  id="timezone-select"
-  className="w-full border rounded px-3 py-2"
-  value={selectedTimeZone}
-  onChange={e => setSelectedTimeZone(e.target.value)}
-  disabled={isLoadingProfile}
->
-  <option value="" disabled>Select your time zone</option>
-  {timeZoneOptions.map(tz => (
-    <option key={tz.value} value={tz.value}>{tz.label}</option>
-  ))}
-</select>
-<p className="text-sm text-muted-foreground">
-  Select your local time zone for accurate scheduling and reminders.
-</p>
+                  id="timezone-select"
+                  className="w-full border rounded px-3 py-2"
+                  value={selectedTimeZone}
+                  onChange={e => setSelectedTimeZone(e.target.value)}
+                  disabled={isLoadingProfile}
+                >
+                  <option value="" disabled>选择你的时区</option>
+                  {timeZoneOptions.map(tz => (
+                    <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  ))}
+                </select>
+                <p className="text-sm text-muted-foreground">
+                  请选择本地时区以获得准确的任务提醒与日程安排
+                </p>
+              </div>
+              {/* 新增：工作偏好设置 */}
+              <Separator />
+              <h4 className="font-medium text-base mb-2 mt-4">工作偏好设定</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="workStartTime">每日工作开始</Label>
+                  <Input
+                    id="workStartTime"
+                    type="time"
+                    value={workStartTime}
+                    onChange={e => setWorkStartTime(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="workEndTime">每日工作结束</Label>
+                  <Input
+                    id="workEndTime"
+                    type="time"
+                    value={workEndTime}
+                    onChange={e => setWorkEndTime(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="focusDuration">专注时长 (分钟)</Label>
+                  <Input
+                    id="focusDuration"
+                    type="number"
+                    min={10}
+                    max={180}
+                    step={5}
+                    value={focusDuration}
+                    onChange={e => setFocusDuration(Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="breakDuration">休息时间 (分钟)</Label>
+                  <Input
+                    id="breakDuration"
+                    type="number"
+                    min={5}
+                    max={60}
+                    step={1}
+                    value={breakDuration}
+                    onChange={e => setBreakDuration(Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="bufferMinutes">任务间缓冲时间 (分钟)</Label>
+                  <Input
+                    id="bufferMinutes"
+                    type="number"
+                    min={0}
+                    max={60}
+                    step={1}
+                    value={bufferMinutes}
+                    onChange={e => setBufferMinutes(Number(e.target.value))}
+                  />
+                </div>
               </div>
               <Button onClick={handleSaveProfile} disabled={isLoadingProfile || isSavingProfile}>
-                {isSavingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
+                {isSavingProfile ? '保存中...' : '保存设置'}
               </Button>
             </CardContent>
           </Card>
