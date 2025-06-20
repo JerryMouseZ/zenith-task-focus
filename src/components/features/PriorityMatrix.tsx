@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TaskCard } from "./TaskCard";
 import { Task, TaskQuadrant, TaskStatus, TaskPriority } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
+import { isTaskUrgent, isTaskImportant } from "@/utils/taskUtils";
 
 interface PriorityMatrixProps {
   onTaskClick: (task: Task) => void;
@@ -10,18 +11,7 @@ interface PriorityMatrixProps {
 export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
   const { tasks, isLoading } = useTasks();
 
-  const isUrgent = (task: Task): boolean => {
-  if (!task.dueDate) return false;
-  // estimatedTime单位为分钟，转换为天
-  const estimatedDays = task.estimatedTime ? task.estimatedTime / 1440 : 0;
-  const daysThreshold = estimatedDays + 2;
-  const daysDiff = (task.dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  return daysDiff <= daysThreshold;
-};
 
-  const isImportant = (task: Task): boolean => {
-    return task.priority === TaskPriority.HIGH;
-  };
 
   // 只显示未完成的任务（兼容 completed 字段）
   const activeTasks = tasks.filter(task => !task.completed);
@@ -30,25 +20,25 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
     {
       title: "Important & Urgent",
       description: "Do First",
-      tasks: activeTasks.filter(task => isImportant(task) && isUrgent(task)),
+      tasks: activeTasks.filter(task => isTaskImportant(task) && isTaskUrgent(task)),
       color: "border-red-200 bg-red-50"
     },
     {
-      title: "Important Not Urgent", 
+      title: "Important Not Urgent",
       description: "Schedule",
-      tasks: activeTasks.filter(task => isImportant(task) && !isUrgent(task)),
+      tasks: activeTasks.filter(task => isTaskImportant(task) && !isTaskUrgent(task)),
       color: "border-yellow-200 bg-yellow-50"
     },
     {
       title: "Urgent Not Important",
       description: "Delegate",
-      tasks: activeTasks.filter(task => !isImportant(task) && isUrgent(task)),
+      tasks: activeTasks.filter(task => !isTaskImportant(task) && isTaskUrgent(task)),
       color: "border-blue-200 bg-blue-50"
     },
     {
       title: "Not Important Not Urgent",
       description: "Eliminate",
-      tasks: activeTasks.filter(task => !isImportant(task) && !isUrgent(task)),
+      tasks: activeTasks.filter(task => !isTaskImportant(task) && !isTaskUrgent(task)),
       color: "border-gray-200 bg-gray-50"
     }
   ];

@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Search, Plus, Calendar, Clock, Tag, Tags, Lock } from "lucide-react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
+import { getStatusLabel, getStatusColor, getPriorityLabel, getPriorityColor, formatEstimatedTimeShort } from "@/utils/taskUtils";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
@@ -62,61 +63,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
     });
   };
 
-  const getPriorityColor = (priority: TaskPriority) => {
-    switch (priority) {
-      case TaskPriority.HIGH:
-        return "bg-red-100 text-red-800 border-red-200";
-      case TaskPriority.MEDIUM:
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case TaskPriority.LOW:
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
 
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TODO:
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case TaskStatus.IN_PROGRESS:
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      case TaskStatus.COMPLETED:
-        return "bg-green-100 text-green-800 border-green-200";
-      case TaskStatus.OVERDUE:
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusLabel = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TODO:
-        return "待办";
-      case TaskStatus.IN_PROGRESS:
-        return "进行中";
-      case TaskStatus.COMPLETED:
-        return "已完成";
-      case TaskStatus.OVERDUE:
-        return "已逾期";
-      default:
-        return status;
-    }
-  };
-
-  const getPriorityLabel = (priority: TaskPriority) => {
-    switch (priority) {
-      case TaskPriority.LOW:
-        return "低";
-      case TaskPriority.MEDIUM:
-        return "中";
-      case TaskPriority.HIGH:
-        return "高";
-      default:
-        return priority;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -280,7 +227,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
                   {task.estimatedTime && (
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      {task.estimatedTime}分钟
+                      {formatEstimatedTimeShort(task.estimatedTime)}
                     </div>
                   )}
                   

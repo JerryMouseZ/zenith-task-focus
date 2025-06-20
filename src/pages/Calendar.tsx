@@ -1,40 +1,20 @@
 
-import { useState } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import { PageLayout } from "@/components/layout/PageLayout";
 import { CalendarView } from "@/components/features/CalendarView";
-import { TaskDetailModal } from "@/components/features/TaskDetailModal";
-import { Task } from "@/types/task";
+import { useTaskModal } from "@/hooks/useTaskModal";
 
 const Calendar = () => {
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-    setIsTaskModalOpen(true);
-  };
-
-  const handleNewTask = () => {
-    setSelectedTask(null);
-    setIsTaskModalOpen(true);
-  };
+  const { selectedTask, isTaskModalOpen, handleTaskClick, handleNewTask, handleTaskModalClose } = useTaskModal();
 
   return (
-    <div className="min-h-screen bg-background flex w-full">
-      <Sidebar onNewTask={handleNewTask} />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-6">
-          <CalendarView onTaskClick={handleTaskClick} />
-        </main>
-      </div>
-      <TaskDetailModal
-        task={selectedTask}
-        isOpen={isTaskModalOpen}
-        onClose={() => setIsTaskModalOpen(false)}
-      />
-    </div>
+    <PageLayout
+      selectedTask={selectedTask}
+      isTaskModalOpen={isTaskModalOpen}
+      onTaskModalClose={handleTaskModalClose}
+      onNewTask={handleNewTask}
+    >
+      <CalendarView onTaskClick={handleTaskClick} />
+    </PageLayout>
   );
 };
 
