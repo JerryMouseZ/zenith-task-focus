@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- ZenithTask colors -->
+    <color name="green_500">#FF10B981</color>
+    <color name="green_600">#FF059669</color>
+    <color name="red_200">#FFFECDD3</color>
+    <color name="red_50">#FFFEF2F2</color>
+    <color name="yellow_200">#FFFEF3C7</color>
+    <color name="yellow_50">#FFFFFBEB</color>
+    <color name="blue_200">#FFDDD6FE</color>
+    <color name="blue_50">#FFF5F3FF</color>
+    <color name="gray_200">#FFE5E7EB</color>
+    <color name="gray_50">#FFF9FAFB</color>
+</resources>
