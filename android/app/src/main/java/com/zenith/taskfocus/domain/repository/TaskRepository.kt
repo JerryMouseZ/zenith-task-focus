@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface TaskRepository {
     
     // Task CRUD operations
-    suspend fun getTasks(): Flow<List<Task>>
+    fun getTasks(): Flow<List<Task>>
     suspend fun getTaskById(id: String): Task?
     suspend fun getChildTasks(parentId: String): List<Task>
     suspend fun createTask(task: Task): Task

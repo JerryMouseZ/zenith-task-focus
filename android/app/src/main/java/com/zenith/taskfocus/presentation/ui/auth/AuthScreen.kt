@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AuthScreen(
@@ -53,7 +54,7 @@ fun AuthScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("邮箱") },
+            label = { Text(stringResource(R.string.email)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -99,7 +100,7 @@ fun AuthScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text(if (isLogin) "登录" else "注册")
+                Text(if (isLogin) stringResource(R.string.sign_in) else stringResource(R.string.sign_up))
             }
         }
         

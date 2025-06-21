@@ -83,17 +83,17 @@ class TaskRepositoryImpl @Inject constructor(
     override suspend fun createSubtask(subtask: Subtask): Subtask {
         // Implement subtask creation
         // This would typically involve a separate API call or updating the parent task
-        TODO("Implement subtask creation")
+        return remoteDataSource.createSubtask(subtask)
     }
     
     override suspend fun updateSubtask(subtask: Subtask): Subtask {
         // Implement subtask update
-        TODO("Implement subtask update")
+        return remoteDataSource.updateSubtask(subtask)
     }
     
     override suspend fun deleteSubtask(id: String) {
         // Implement subtask deletion
-        TODO("Implement subtask deletion")
+        remoteDataSource.deleteSubtask(id)
     }
     
     override suspend fun syncTasks() {
