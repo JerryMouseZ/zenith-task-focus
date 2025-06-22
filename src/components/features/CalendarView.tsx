@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -14,6 +15,8 @@ type ViewMode = "day" | "week" | "month";
 type CalendarMode = "start" | "due"; // 新增：区分开始/截止时间视图
 
 export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
+  const isMobile = useIsMobile();
+
   // 默认展示开始时间视图
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("start"); // "start" | "due"
   const [viewMode, setViewMode] = useState<ViewMode>("day");
@@ -32,49 +35,51 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
   });
 
   const renderDayView = () => (
-    <div className="grid grid-cols-[80px_1fr] gap-0 border rounded-lg overflow-hidden">
-      <div className="bg-muted/30">
-        <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
-          Time
-        </div>
-        {hours.map((hour) => (
-          <div key={hour} className="h-16 border-b border-border flex items-center justify-center text-sm">
-            {hour.toString().padStart(2, '0')}:00
+    <div className="overflow-x-auto border rounded-lg">
+      <div className="min-w-[320px] grid grid-cols-[80px_1fr] gap-0">
+        <div className="bg-muted/30">
+          <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
+            Time
           </div>
-        ))}
-      </div>
-      <div>
-        <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
-          {`${currentDate.getMonth() + 1}月${currentDate.getDate()}日（${'日一二三四五六'[currentDate.getDay()]}）`}
+          {hours.map((hour) => (
+            <div key={hour} className={`${isMobile ? "h-12" : "h-16"} border-b border-border flex items-center justify-center text-sm`}>
+              {hour.toString().padStart(2, '0')}:00
+            </div>
+          ))}
         </div>
-        {hours.map((hour) => (
-          <div key={hour} className="h-16 border-b border-border relative hover:bg-muted/20 cursor-pointer">
-            {filteredTasks
-              .filter(task => {
-                const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                return date &&
-                  date.toDateString() === currentDate.toDateString() &&
-                  date.getHours() === hour;
-              })
-              .map(task => {
-                const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                return (
-                  <div
-                    key={task.id}
-                    onClick={() => onTaskClick(task)}
-                    className="absolute left-2 right-2 top-1 bg-red-100 border-l-4 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
-                  >
-                    <div className="font-medium">{task.title}</div>
-                    <div className="text-muted-foreground">
-                      {calendarMode === "start"
-                        ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
-                        : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+        <div>
+          <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
+            {`${currentDate.getMonth() + 1}月${currentDate.getDate()}日（${'日一二三四五六'[currentDate.getDay()]}）`}
+          </div>
+          {hours.map((hour) => (
+            <div key={hour} className={`${isMobile ? "h-12" : "h-16"} border-b border-border relative hover:bg-muted/20 cursor-pointer`}>
+              {filteredTasks
+                .filter(task => {
+                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                  return date &&
+                    date.toDateString() === currentDate.toDateString() &&
+                    date.getHours() === hour;
+                })
+                .map(task => {
+                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => onTaskClick(task)}
+                      className="absolute left-2 right-2 top-1 bg-red-100 border-l-4 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200 break-words whitespace-normal"
+                    >
+                      <div className="font-medium break-words whitespace-normal">{task.title}</div>
+                      <div className="text-muted-foreground">
+                        {calendarMode === "start"
+                          ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+                          : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-          </div>
-        ))}
+                  );
+                })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -90,11 +95,11 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
       <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-0 border rounded-lg overflow-hidden">
         <div className="bg-muted/30">
           <div className="h-12 border-b border-border"></div>
-          {hours.map((hour) => (
-            <div key={hour} className="h-12 border-b border-border flex items-center justify-center text-sm">
-              {hour.toString().padStart(2, '0')}:00
-            </div>
-          ))}
+            {hours.map((hour) => (
+              <div key={hour} className={`${isMobile ? "h-8" : "h-12"} border-b border-border flex items-center justify-center text-sm`}>
+                {hour.toString().padStart(2, '0')}:00
+              </div>
+            ))}
         </div>
         {weekDays.map((day, dayIndex) => (
           <div key={dayIndex}>
@@ -113,23 +118,23 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
                       date.toDateString() === day.toDateString() &&
                       date.getHours() === hour;
                   })
-                  .map(task => {
-                    const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                    return (
-                      <div
-                        key={task.id}
-                        onClick={() => onTaskClick(task)}
-                        className="absolute inset-1 bg-red-100 border-l-2 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200"
-                      >
-                        <div className="font-medium truncate">{task.title}</div>
-                        <div className="text-muted-foreground text-xs">
-                          {calendarMode === "start"
-                            ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
-                            : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
-                        </div>
+                .map(task => {
+                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => onTaskClick(task)}
+                      className="absolute inset-1 bg-red-100 border-l-2 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200 break-words whitespace-normal"
+                    >
+                      <div className="font-medium break-words whitespace-normal">{task.title}</div>
+                      <div className="text-muted-foreground text-xs">
+                        {calendarMode === "start"
+                          ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+                          : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -226,7 +231,7 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
           <h1 className="text-2xl font-semibold">日历</h1>
           <div className="flex items-center gap-2">
             {/* 新增：切换开始/截止时间模式 */}
-            <Button
+          <Button
               variant={calendarMode === "start" ? "default" : "outline"}
               size="sm"
               onClick={() => setCalendarMode("start")}
@@ -242,31 +247,35 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             >
               截止时间视图
             </Button>
-            {/* 只在截止时间模式下显示月视图切换按钮 */}
-            <Button
-              variant={viewMode === "day" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("day")}
-              className={viewMode === "day" ? "bg-green-50 text-green-700" : ""}
-            >
-              日视图
-            </Button>
-            <Button
-              variant={viewMode === "week" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("week")}
-              className={viewMode === "week" ? "bg-green-50 text-green-700" : ""}
-            >
-              周视图
-            </Button>
-            <Button
-              variant={viewMode === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("month")}
-              className={viewMode === "month" ? "bg-green-50 text-green-700" : ""}
-            >
-              月视图
-            </Button>
+            {/* For mobile, hide week/month view buttons */}
+            {!isMobile && (
+              <>
+                <Button
+                  variant={viewMode === "day" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("day")}
+                  className={viewMode === "day" ? "bg-green-50 text-green-700" : ""}
+                >
+                  日视图
+                </Button>
+                <Button
+                  variant={viewMode === "week" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("week")}
+                  className={viewMode === "week" ? "bg-green-50 text-green-700" : ""}
+                >
+                  周视图
+                </Button>
+                <Button
+                  variant={viewMode === "month" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("month")}
+                  className={viewMode === "month" ? "bg-green-50 text-green-700" : ""}
+                >
+                  月视图
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -285,9 +294,9 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         </p>
       </div>
       <Card className="p-4">
-        {viewMode === "day" && renderDayView()}
-        {viewMode === "week" && renderWeekView()}
-        {viewMode === "month" && renderMonthView()}
+          {viewMode === "day" && renderDayView()}
+          {!isMobile && viewMode === "week" && renderWeekView()}
+          {!isMobile && viewMode === "month" && renderMonthView()}
       </Card>
     </div>
   );

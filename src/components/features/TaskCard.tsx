@@ -4,6 +4,7 @@ import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
 import { differenceInCalendarDays } from "date-fns";
 import { getStatusLabel, getStatusColor, getPriorityLabel, getPriorityColor } from "@/utils/taskUtils";
+import { TaskStatus } from '../../types/task';
 
 interface TaskCardProps {
   task: Task;
@@ -13,8 +14,6 @@ interface TaskCardProps {
   onStatusToggle?: (task: Task) => void;
   className?: string;
 }
-
-import { TaskStatus } from '../../types/task';
 
 export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatusToggle, className }: TaskCardProps) => {
   const formatDueDate = (date: Date) => {
@@ -56,28 +55,21 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
           className="mt-1 mr-2"
         />
       )}
-      <div className="flex-1">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0">
             <h4
-              className={`font-medium ${task.status === TaskStatus.COMPLETED ? 'line-through text-muted-foreground' : 'text-gray-900'} mb-2 group-hover:text-green-700 transition-colors truncate`}
-              style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: '100%',
-              }}
-              title={task.title}
+              className={`font-medium ${task.status === TaskStatus.COMPLETED ? 'line-through text-muted-foreground' : 'text-gray-900'} mb-2 group-hover:text-green-700 transition-colors line-clamp-2 break-words`}
             >
-              {task.title.length > 28 ? task.title.slice(0, 28) + '…' : task.title}
+              {task.title}
             </h4>
             {task.isFixedTime && (
-              <div className="flex items-center" title="固定时间任务">
+              <div className="flex-shrink-0 mt-1" title="固定时间任务">
                 <Lock className="w-4 h-4 text-amber-500" />
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2 flex-shrink-0">
             <Badge className={getPriorityColor(task.priority)}>
               {getPriorityLabel(task.priority)}
             </Badge>
@@ -93,7 +85,7 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
           </p>
         )}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {task.dueDate && (
               <div className={`flex items-center gap-1 text-xs ${getDueDateColor(task.dueDate)}`}>
                 <Calendar className="w-3 h-3" />
@@ -107,23 +99,18 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
               </div>
             )}
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap max-w-[50%]">
             {task.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
+              <Badge key={tag} variant="secondary" className="text-xs break-words">
                 {tag}
               </Badge>
             ))}
             {task.tags.length > 2 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs break-words">
                 +{task.tags.length - 2}
               </Badge>
             )}
           </div>
-          {task.tags.length > 2 && (
-            <Badge variant="secondary" className="text-xs">
-              +{task.tags.length - 2}
-            </Badge>
-          )}
         </div>
       </div>
     </div>
