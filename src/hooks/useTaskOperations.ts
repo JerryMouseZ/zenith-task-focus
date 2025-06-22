@@ -28,10 +28,7 @@ export const useTaskOperations = () => {
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) => {
-      const validation = validateTask(updates);
-      if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
-      }
+
       return taskService.updateTask(id, updates);
     },
     onSuccess: () => {

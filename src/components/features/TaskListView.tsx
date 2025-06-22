@@ -4,7 +4,7 @@ import { Task, TaskStatus } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
 import { useTaskFilters } from "@/hooks/useTaskFilters";
 import { TaskFilters } from "./task-list/TaskFilters";
-import { TaskListItem } from "./task-list/TaskListItem";
+import { TaskCard } from "./TaskCard";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
@@ -66,10 +66,12 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
       {/* Task List */}
       <div className="space-y-3">
         {filteredTasks.map((task) => (
-          <TaskListItem
+          <TaskCard
             key={task.id}
             task={task}
-            onTaskClick={onTaskClick}
+            onClick={() => onTaskClick(task)}
+            showCheckbox
+            checked={task.status === TaskStatus.COMPLETED}
             onStatusToggle={handleTaskStatusToggle}
           />
         ))}

@@ -15,13 +15,18 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export const Sidebar = ({ onNewTask, onQuickAdd }: SidebarProps) => {
   const location = useLocation();
 
+  // 判断是否为移动端
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const menuItems = [
     { icon: Inbox, label: "优先矩阵", path: "/", active: false },
     { icon: List, label: "所有任务", path: "/tasks", active: false },
     { icon: Calendar, label: "Calendar", path: "/calendar", active: false },
-    { icon: BarChart3, label: "数据分析", path: "/analytics", active: false },
-    { icon: CheckCircle, label: "已完成", path: "/completed", active: false },
-    { icon: Trash, label: "Trash", path: "/trash", active: false },
+    // 仅桌面端显示以下菜单项
+    ...(!isMobile ? [
+      { icon: BarChart3, label: "数据分析", path: "/analytics", active: false },
+      { icon: CheckCircle, label: "已完成", path: "/completed", active: false },
+      { icon: Trash, label: "Trash", path: "/trash", active: false },
+    ] : [])
   ];
 
   // 移动端抽屉开关
