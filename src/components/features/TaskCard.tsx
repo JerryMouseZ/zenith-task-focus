@@ -38,12 +38,21 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
       onClick={onClick}
       className="bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 group"
     >
-      <h4 className="font-medium text-gray-900 mb-2 group-hover:text-green-700 transition-colors">
-        {task.title}
+      <h4
+        className="font-medium text-gray-900 mb-2 group-hover:text-green-700 transition-colors truncate"
+        style={{
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '100%',
+        }}
+        title={task.title}
+      >
+        {task.title.length > 28 ? task.title.slice(0, 28) + '…' : task.title}
       </h4>
-      
+      {/* 移动端隐藏描述，桌面端显示 */}
       {task.description && (
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+        <p className="hidden sm:block text-sm text-gray-600 mb-3 line-clamp-2">
           {task.description}
         </p>
       )}

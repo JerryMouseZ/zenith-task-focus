@@ -83,12 +83,38 @@ export const Sidebar = ({ onNewTask, onQuickAdd }: SidebarProps) => {
 
   return (
     <>
-      {/* 移动端汉堡按钮，仅在小屏显示 */}
-      <div className="md:hidden p-2 bg-card border-b border-border flex items-center">
+      {/* 移动端汉堡按钮，仅在小屏显示，且固定在左上角 */}
+      {/* 移动端底部悬浮汉堡菜单按钮 */}
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed',
+          left: '50%',
+          bottom: 24,
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          pointerEvents: 'none',
+        }}
+      >
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
-              <Menu className="w-6 h-6" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setOpen(true)}
+              style={{
+                borderRadius: '50%',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                width: 56,
+                height: 56,
+                background: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'auto',
+              }}
+            >
+              <Menu className="w-7 h-7 text-green-600" />
               <span className="sr-only">打开菜单</span>
             </Button>
           </SheetTrigger>
@@ -96,7 +122,6 @@ export const Sidebar = ({ onNewTask, onQuickAdd }: SidebarProps) => {
             {sidebarContent}
           </SheetContent>
         </Sheet>
-        <h1 className="ml-2 text-lg font-bold text-foreground">ZenithTask</h1>
       </div>
       {/* 桌面端侧边栏，仅在 md 及以上显示 */}
       <div className="hidden md:flex h-screen sticky top-0 left-0 z-20">

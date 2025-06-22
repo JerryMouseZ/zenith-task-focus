@@ -11,8 +11,6 @@ interface PriorityMatrixProps {
 export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
   const { tasks, isLoading } = useTasks();
 
-
-
   // 只显示未完成的任务（兼容 completed 字段）
   const activeTasks = tasks.filter(task => !task.completed);
 
@@ -52,11 +50,18 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div
+      className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full"
+    >
       {quadrants.map((quadrant, index) => (
         <div
           key={quadrant.title}
-          className={`rounded-lg border-2 p-4 ${quadrant.color} transition-all duration-200 hover:shadow-md`}
+          className={`rounded-lg border-2 p-2 sm:p-4 ${quadrant.color} transition-all duration-200 hover:shadow-md w-full max-w-full`}
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
+          }}
         >
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-800">{quadrant.title}</h3>
@@ -65,13 +70,22 @@ export const PriorityMatrix = ({ onTaskClick }: PriorityMatrixProps) => {
               {quadrant.tasks.length} task{quadrant.tasks.length !== 1 ? 's' : ''}
             </div>
           </div>
-          
+
           <div className="space-y-3 max-h-96 overflow-y-auto">
+            <style>{`
+              @media (max-width: 640px) {
+                .priority-matrix-taskcard {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                }
+              }
+            `}</style>
             {quadrant.tasks.map((task) => (
               <TaskCard
                 key={task.id}
                 task={task}
                 onClick={() => onTaskClick(task)}
+                className="priority-matrix-taskcard"
               />
             ))}
             {quadrant.tasks.length === 0 && (
