@@ -28,10 +28,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   return (
     <div className="min-h-screen bg-background flex w-full">
+      {/* Sidebar 内部已做响应式处理，这里无需再区分 */}
       <Sidebar onNewTask={onNewTask} onQuickAdd={onQuickAdd} />
       <div className="flex-1 flex flex-col">
         <Header />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6 transition-all duration-200">
           {children}
         </main>
       </div>
