@@ -33,7 +33,7 @@ export const useTaskDetailModal = ({
     formData: editedTask,
     estimatedDays,
     estimatedHours,
-    updateField: handleTaskChange,
+    updateMultipleFields: handleTaskChange,
     updateEstimatedDays: handleEstimatedDaysChange,
     updateEstimatedHours: handleEstimatedHoursChange,
     resetForm,
