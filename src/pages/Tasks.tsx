@@ -10,14 +10,7 @@ const Tasks = () => {
   const { isOpen, closeQuickAdd, openQuickAdd } = useQuickAdd();
   const { selectedTask, isTaskModalOpen, handleTaskClick, handleNewTask, handleTaskModalClose } = useTaskModal();
 
-  const bottomActionBar = (
-    <div className="flex justify-center w-full max-w-screen-xl mx-auto px-4">
-      <Button onClick={handleNewTask} className="bg-green-500 hover:bg-green-600 w-full max-w-md">
-        <Plus className="w-4 h-4 mr-2" />
-        新建任务
-      </Button>
-    </div>
-  );
+  const bottomActionBar = null;
 
   return (
     <PageLayout
