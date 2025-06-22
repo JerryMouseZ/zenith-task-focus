@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">zenith-task-focus</string>
+    <string name="title_activity_main">zenith-task-focus</string>
+    <string name="package_name">com.zenith.taskfocus</string>
+    <string name="custom_url_scheme">com.zenith.taskfocus</string>
+</resources>
