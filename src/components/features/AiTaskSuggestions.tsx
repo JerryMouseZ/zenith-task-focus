@@ -48,9 +48,10 @@ export const AiTaskSuggestions = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<TaskSuggestion | null>(null);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [fromCache, setFromCache] = useState(false);
   const { profile } = useProfile();
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = async (forceRefresh = false) => {
     if (!profile?.ai_api_key || !profile?.ai_base_url || !profile?.ai_model) {
       return;
     }
@@ -66,7 +67,8 @@ export const AiTaskSuggestions = ({
             baseUrl: profile.ai_base_url,
             model: profile.ai_model
           },
-          timezone: profile?.timezone
+          timezone: profile?.timezone,
+          forceRefresh
         }
       });
 
@@ -74,6 +76,7 @@ export const AiTaskSuggestions = ({
 
       if (data.success) {
         setSuggestions(data.suggestions);
+        setFromCache(data.fromCache || false);
       } else {
         throw new Error(data.error);
       }
@@ -86,8 +89,15 @@ export const AiTaskSuggestions = ({
   };
 
   useEffect(() => {
-    loadSuggestions();
-  }, [currentTask, recentTasks, profile]);
+    // Only load suggestions on mount if we don't have cached suggestions
+    if (suggestions.length === 0) {
+      loadSuggestions();
+    }
+  }, [profile]); // Remove currentTask and recentTasks from dependencies
+
+  const handleRefresh = () => {
+    loadSuggestions(true);
+  };
 
   const handleCreateTask = (suggestion: TaskSuggestion) => {
     setSelectedSuggestion(suggestion);
@@ -145,12 +155,18 @@ export const AiTaskSuggestions = ({
             <div className="flex items-center gap-2 text-sm">
               <Lightbulb className="w-4 h-4" />
               AI任务建议
+              {fromCache && (
+                <Badge variant="secondary" className="text-xs">
+                  已缓存
+                </Badge>
+              )}
             </div>
             <Button
               variant="ghost"
               size="sm"
-              onClick={loadSuggestions}
+              onClick={handleRefresh}
               disabled={isLoading}
+              title="刷新建议"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>

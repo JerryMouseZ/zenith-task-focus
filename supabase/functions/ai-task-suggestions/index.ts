@@ -10,7 +10,7 @@ serve(async (req) => {
   }
 
   try {
-    const { currentTask, recentTasks, aiConfig, timezone } = await req.json();
+    const { currentTask, recentTasks, aiConfig, timezone, forceRefresh } = await req.json();
     
     if (!aiConfig || !aiConfig.apiKey || !aiConfig.baseUrl || !aiConfig.model) {
       throw new Error('AI configuration is required');
@@ -40,6 +40,29 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
+    // Check for cached suggestions if forceRefresh is not true
+    if (!forceRefresh) {
+      const { data: cachedSuggestions, error: cacheError } = await supabase
+        .from('ai_suggestions_cache')
+        .select('suggestions, expires_at')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!cacheError && cachedSuggestions) {
+        const expiresAt = new Date(cachedSuggestions.expires_at);
+        if (expiresAt > new Date()) {
+          console.log('Returning cached suggestions');
+          return new Response(JSON.stringify({ 
+            success: true, 
+            suggestions: cachedSuggestions.suggestions,
+            fromCache: true
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+
     // Query all pending tasks for the user using service role client
     const { data: allTasks, error: tasksError } = await supabase
       .from('tasks')
@@ -62,6 +85,7 @@ serve(async (req) => {
       `)
       .eq('user_id', user.id)
       .in('status', ['todo', 'in_progress'])
+      .neq('completed', true)
       .order('created_at', { ascending: false });
 
     if (tasksError) {
@@ -112,6 +136,8 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
 5. 考虑任务的依赖关系和时间安排
 6. 包含合适的时间估算和上下文标签
 
+请按照相关性和重要性排序，严格只返回2个最相关的建议。不要返回超过2个建议。
+
 返回格式为JSON数组，每个建议包含：
 - title: 任务标题
 - description: 任务描述（可选）
@@ -122,6 +148,8 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
 - tags: 相关标签数组
 - reason: 推荐理由（简短说明为什么现在推荐这个任务）
 - source: 建议来源 ('current_task', 'pending_tasks', 'optimization', 'new_suggestion')
+
+重要提醒：严格限制只返回2个建议，按重要性和相关性排序后选择前2个。
 
 当前用户时区：${userTimezone}
 当前时间：${currentTime}
@@ -261,9 +289,32 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
 
     console.log('Final suggestions:', suggestions);
 
+    // Cache the suggestions in the database
+    const cacheData = {
+      user_id: user.id,
+      suggestions: suggestions, // Don't truncate here since AI should return exactly 2
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('Attempting to cache suggestions:', cacheData);
+
+    // Use upsert to either insert or update existing cache
+    const { error: cacheError } = await supabase
+      .from('ai_suggestions_cache')
+      .upsert(cacheData, { onConflict: 'user_id' });
+
+    if (cacheError) {
+      console.error('Failed to cache suggestions:', cacheError);
+      // Don't throw error, just continue without caching
+    } else {
+      console.log('Successfully cached suggestions');
+    }
+
     return new Response(JSON.stringify({ 
       success: true, 
-      suggestions: suggestions.slice(0, 5) // 限制最多5个建议
+      suggestions: suggestions, // Return all suggestions from AI (should be exactly 2)
+      fromCache: false
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
