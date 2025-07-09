@@ -33,6 +33,11 @@ export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
     setIsFocusModeOpen(true);
   };
 
+  const handleTaskSwitch = (task: Task) => {
+    setFocusTask(task);
+    // 专注模式已经打开，只需要切换任务
+  };
+
   const handleFocusModeClose = () => {
     setIsFocusModeOpen(false);
     setFocusTask(null);
@@ -134,6 +139,7 @@ export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
         task={focusTask}
         isOpen={isFocusModeOpen}
         onClose={handleFocusModeClose}
+        onTaskSwitch={handleTaskSwitch}
       />
     </div>
   );

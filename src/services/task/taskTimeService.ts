@@ -5,41 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const taskTimeService = {
   /**
-   * Adjust task times when inserting a new task
-   */
-  async adjustTaskTimesOnInsert(
-    userId: string,
-    insertTime: string,
-    durationMinutes: number
-  ): Promise<void> {
-    const { error } = await supabase.rpc('adjust_task_times_on_insert', {
-      p_user_id: userId,
-      p_insert_time: insertTime,
-      p_duration_minutes: durationMinutes
-    });
-
-    if (error) throw error;
-  },
-
-  /**
-   * Adjust task times when deleting a task
-   */
-  async adjustTaskTimesOnDelete(
-    userId: string,
-    deleteStartTime: string,
-    durationMinutes: number
-  ): Promise<void> {
-    const { error } = await supabase.rpc('adjust_task_times_on_delete', {
-      p_user_id: userId,
-      p_delete_start_time: deleteStartTime,
-      p_duration_minutes: durationMinutes
-    });
-
-    if (error) throw error;
-  },
-
-  /**
    * Get available time slots for scheduling
+   * Note: start_time and end_time fields have been removed from tasks table
    */
   async getAvailableTimeSlots(
     userId: string,
@@ -54,6 +21,7 @@ export const taskTimeService = {
 
   /**
    * Check if a time slot is available
+   * Note: This function is deprecated as start_time and end_time fields have been removed
    */
   async isTimeSlotAvailable(
     userId: string,
@@ -61,16 +29,7 @@ export const taskTimeService = {
     endTime: Date,
     excludeTaskId?: string
   ): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('is_fixed_time', true)
-      .or(`start_time.lte.${endTime.toISOString()},end_time.gte.${startTime.toISOString()}`)
-      .neq('id', excludeTaskId || '');
-
-    if (error) throw error;
-
-    return !data || data.length === 0;
+    // Since start_time and end_time fields have been removed, always return true
+    return true;
   },
 };

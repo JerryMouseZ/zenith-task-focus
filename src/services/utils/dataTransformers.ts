@@ -18,7 +18,7 @@ export function transformDatabaseTaskToTask(dbTask: DatabaseTask): Task {
     tags: dbTask.tags || [],
     estimatedTime: dbTask.estimated_time,
     actualTime: dbTask.actual_time,
-    currentTime: dbTask.current_time || 0,
+    currentTime: dbTask.current_time_minutes || 0,
     projectId: dbTask.project_id,
     parentId: dbTask.parent_id,
     completed: dbTask.completed ?? false,
@@ -28,6 +28,9 @@ export function transformDatabaseTaskToTask(dbTask: DatabaseTask): Task {
     userId: dbTask.user_id,
     energyLevel: (dbTask.energy_level as EnergyLevel) || EnergyLevel.MEDIUM,
     contextTags: dbTask.context_tags || ['@电脑前'],
+    blockingInfo: dbTask.blocking_info,
+    customFilterTags: dbTask.custom_filter_tags || [],
+    assignedPersonId: dbTask.assigned_person_id,
   };
 }
 
@@ -62,7 +65,7 @@ export function transformTaskToCreateData(
     is_fixed_time: task.isFixedTime || false,
     estimated_time: task.estimatedTime || null,
     actual_time: task.actualTime || null,
-    current_time: task.currentTime || 0,
+    current_time_minutes: task.currentTime || 0,
     tags: task.tags || [],
     project_id: task.projectId || null,
     parent_id: task.parentId || null,
@@ -71,6 +74,9 @@ export function transformTaskToCreateData(
     recurrence_end_date: task.recurrence_end_date?.toISOString() || null,
     energy_level: task.energyLevel || EnergyLevel.MEDIUM,
     context_tags: task.contextTags || ['@电脑前'],
+    blocking_info: task.blockingInfo,
+    custom_filter_tags: task.customFilterTags || [],
+    assigned_person_id: task.assignedPersonId || null,
   };
 }
 
@@ -90,7 +96,7 @@ export function transformTaskToUpdateData(updates: Partial<Task>): TaskUpdateDat
   if (updates.isFixedTime !== undefined) updateData.is_fixed_time = updates.isFixedTime;
   if (updates.estimatedTime !== undefined) updateData.estimated_time = updates.estimatedTime;
   if (updates.actualTime !== undefined) updateData.actual_time = updates.actualTime;
-  if (updates.currentTime !== undefined) updateData.current_time = updates.currentTime;
+  if (updates.currentTime !== undefined) updateData.current_time_minutes = updates.currentTime;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
   if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
   if (updates.parentId !== undefined) updateData.parent_id = updates.parentId;
@@ -101,6 +107,9 @@ export function transformTaskToUpdateData(updates: Partial<Task>): TaskUpdateDat
   }
   if (updates.energyLevel !== undefined) updateData.energy_level = updates.energyLevel;
   if (updates.contextTags !== undefined) updateData.context_tags = updates.contextTags;
+  if (updates.blockingInfo !== undefined) updateData.blocking_info = updates.blockingInfo;
+  if (updates.customFilterTags !== undefined) updateData.custom_filter_tags = updates.customFilterTags;
+  if (updates.assignedPersonId !== undefined) updateData.assigned_person_id = updates.assignedPersonId;
 
   return updateData;
 }

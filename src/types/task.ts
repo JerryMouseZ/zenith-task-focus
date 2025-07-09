@@ -25,6 +25,24 @@ export interface Task extends BaseEntity {
   difficulty?: TaskDifficulty;
   energyLevel: EnergyLevel;
   contextTags: string[];
+  blockingInfo?: BlockingInfo; // 添加阻塞信息
+  customFilterTags?: string[]; // 添加自定义筛选标签
+  assignedPersonId?: string; // 分配的人员ID
+}
+
+export interface Person extends BaseEntity {
+  name: string;
+  avatar?: string;
+  email?: string;
+  role?: string;
+  department?: string;
+  // 继承自smart card的属性
+  defaultEnergyLevel?: EnergyLevel;
+  defaultContextTags?: string[];
+  defaultPriority?: TaskPriority;
+  defaultEstimatedTime?: number;
+  skills?: string[];
+  availability?: 'available' | 'busy' | 'unavailable';
 }
 
 export interface Subtask extends BaseEntity {
@@ -44,6 +62,13 @@ export enum TaskStatus {
   DELETED = "deleted",
   BLOCKED = "blocked",
   CANCELLED = "cancelled"
+}
+
+export interface BlockingInfo {
+  type: 'waiting' | 'dependency' | 'external' | 'resource';
+  description: string;
+  blockedBy?: string; // Optional reference to what's blocking
+  expectedResolution?: Date;
 }
 
 export enum TaskPriority {

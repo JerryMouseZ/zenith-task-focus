@@ -61,15 +61,6 @@ export const taskService = {
 
     const taskData = transformTaskToCreateData(task, user.id);
 
-    // Handle time adjustments for non-fixed time tasks
-    if (taskData.start_time && taskData.estimated_time && !taskData.is_fixed_time) {
-      await taskTimeService.adjustTaskTimesOnInsert(
-        user.id,
-        taskData.start_time,
-        taskData.estimated_time
-      );
-    }
-
     const { data, error } = await supabase
       .from('tasks')
       .insert(taskData)
@@ -112,15 +103,6 @@ export const taskService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Get task info before deletion for time adjustments
-    const { data: taskToDelete, error: fetchError } = await supabase
-      .from('tasks')
-      .select('start_time, estimated_time, is_fixed_time')
-      .eq('id', id)
-      .single();
-
-    if (fetchError) throw fetchError;
-
     // Delete the task
     const { error } = await supabase
       .from('tasks')
@@ -128,14 +110,5 @@ export const taskService = {
       .eq('id', id);
 
     if (error) throw error;
-
-    // Handle time adjustments for non-fixed time tasks
-    if (taskToDelete.start_time && taskToDelete.estimated_time && !taskToDelete.is_fixed_time) {
-      await taskTimeService.adjustTaskTimesOnDelete(
-        user.id,
-        taskToDelete.start_time,
-        taskToDelete.estimated_time
-      );
-    }
   },
 };

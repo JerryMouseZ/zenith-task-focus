@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Task, EnergyLevel, TaskPriority, TaskStatus } from '@/types/task';
 import { SmartViewFilter, SmartView, PRESET_SMART_VIEWS } from '@/types/smartViews';
-import { differenceInCalendarDays, isToday, isThisWeek } from 'date-fns';
+import { differenceInCalendarDays, isToday, isThisWeek, isTomorrow } from 'date-fns';
 
 export const useSmartViews = (tasks: Task[]) => {
   // Filter tasks based on smart view criteria
@@ -23,13 +23,21 @@ export const useSmartViews = (tasks: Task[]) => {
         if (!hasMatchingContextTag) return false;
       }
 
-      // Due date filter
+      // Due date filter - updated to handle recent tasks (today + tomorrow)
       if (filter.filters.dueDate) {
         if (!task.dueDate) return false;
         
         switch (filter.filters.dueDate) {
           case 'today':
-            if (!isToday(task.dueDate)) return false;
+            // For "recent" filters, include both today and tomorrow
+            if (filter.id === 'urgent-recent' || filter.id === 'quick-wins-recent') {
+              if (!isToday(task.dueDate) && !isTomorrow(task.dueDate)) return false;
+            } else {
+              if (!isToday(task.dueDate)) return false;
+            }
+            break;
+          case 'tomorrow':
+            if (!isTomorrow(task.dueDate)) return false;
             break;
           case 'thisWeek':
             if (!isThisWeek(task.dueDate)) return false;
@@ -56,13 +64,21 @@ export const useSmartViews = (tasks: Task[]) => {
         if (!filter.filters.status.includes(task.status)) return false;
       }
 
+      // Custom filter tags filter
+      if (filter.filters.customFilterTags && filter.filters.customFilterTags.length > 0) {
+        const hasMatchingCustomTag = filter.filters.customFilterTags.some(tag => 
+          task.customFilterTags?.includes(tag)
+        );
+        if (!hasMatchingCustomTag) return false;
+      }
+
       return true;
     });
   };
 
   // Generate smart views with filtered tasks
   const smartViews: SmartView[] = useMemo(() => {
-    return PRESET_SMART_VIEWS.map(filter => {
+    const views = PRESET_SMART_VIEWS.map(filter => {
       const filteredTasks = filterTasksByView(tasks, filter);
       return {
         id: filter.id,
@@ -71,9 +87,13 @@ export const useSmartViews = (tasks: Task[]) => {
         icon: filter.icon,
         color: filter.color,
         tasks: filteredTasks,
-        count: filteredTasks.length
+        count: filteredTasks.length,
+        priority: filter.priority
       };
     });
+
+    // Sort by priority (lower numbers = higher priority)
+    return views.sort((a, b) => a.priority - b.priority);
   }, [tasks]);
 
   // Get tasks for a specific smart view
@@ -101,12 +121,42 @@ export const useSmartViews = (tasks: Task[]) => {
     );
   }, [smartViews]);
 
+  // Get blocked tasks
+  const getBlockedTasks = (): Task[] => {
+    return tasks.filter(task => task.status === TaskStatus.BLOCKED && !task.completed);
+  };
+
+  // Get blocked tasks by blocking type
+  const getBlockedTasksByType = (type: string): Task[] => {
+    return tasks.filter(task => 
+      task.status === TaskStatus.BLOCKED && 
+      task.blockingInfo?.type === type &&
+      !task.completed
+    );
+  };
+
+  // Search blocked tasks by tags
+  const searchBlockedTasks = (searchTerm: string): Task[] => {
+    const blockedTasks = getBlockedTasks();
+    return blockedTasks.filter(task => 
+      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      task.contextTags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      task.customFilterTags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      task.blockingInfo?.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
   return {
     smartViews,
     getTasksForView,
     getViewById,
     totalTaskCount,
     mostRelevantView,
-    filterTasksByView
+    filterTasksByView,
+    getBlockedTasks,
+    getBlockedTasksByType,
+    searchBlockedTasks
   };
 };

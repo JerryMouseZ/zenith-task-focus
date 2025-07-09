@@ -1,4 +1,4 @@
-import { Clock, Calendar, Lock, Zap, Play } from "lucide-react";
+import { Clock, Calendar, Lock, Zap, Play, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Task } from "@/types/task";
@@ -84,6 +84,12 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
               <Badge className={getEnergyLevelColor(task.energyLevel)}>
                 <Zap className="w-3 h-3 mr-1" />
                 {getEnergyLevelLabel(task.energyLevel)}
+              </Badge>
+            )}
+            {task.status === TaskStatus.BLOCKED && task.blockingInfo && (
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                {task.blockingInfo.description}
               </Badge>
             )}
             {onFocusStart && task.status !== TaskStatus.COMPLETED && (
