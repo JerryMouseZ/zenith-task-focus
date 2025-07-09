@@ -62,6 +62,10 @@ export const QuickAddCommand = ({ isOpen, onClose }: QuickAddCommandProps) => {
           dueDate: data.task.dueDate ? fixDate(data.task.dueDate) : undefined,
           endTime: data.task.endTime ? fixDate(data.task.endTime) : undefined,
           recurrence_end_date: data.task.recurrence_end_date ? fixDate(data.task.recurrence_end_date) : undefined,
+          // 处理AI智能解析的新字段
+          contextTags: data.task.contextTags || [],
+          energyLevel: data.task.energyLevel || 'medium',
+          tags: data.task.tags || [],
         };
         setParsedTask(task);
         setShowTaskForm(true);

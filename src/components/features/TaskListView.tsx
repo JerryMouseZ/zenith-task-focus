@@ -7,15 +7,20 @@ import { useTaskFilters } from "@/hooks/useTaskFilters";
 import { TaskFilters } from "./task-list/TaskFilters";
 import { TaskCard } from "./TaskCard";
 import { FocusMode } from "./FocusMode";
+import { AiTaskSuggestions } from "./AiTaskSuggestions";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
 }
 
 export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
-  const { tasks, isLoading, updateTask } = useTasks();
+  const { tasks, isLoading, updateTask, refetch } = useTasks();
   const [focusTask, setFocusTask] = useState<Task | null>(null);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+
+  const handleTaskCreated = () => {
+    refetch();
+  };
 
   const {
     searchTerm,
@@ -85,6 +90,13 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
         onContextTagToggle={handleContextTagToggle}
         onClearTagFilters={clearTagFilters}
         onClearContextTagFilters={clearContextTagFilters}
+      />
+
+      {/* AI Task Suggestions */}
+      <AiTaskSuggestions
+        currentTask={focusTask}
+        recentTasks={filteredTasks.slice(0, 10)}
+        onTaskCreated={handleTaskCreated}
       />
 
       {/* Task List */}

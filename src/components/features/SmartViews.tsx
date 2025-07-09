@@ -5,17 +5,22 @@ import { SmartView } from "@/types/smartViews";
 import { useTasks } from "@/hooks/useTasks";
 import { useSmartViews } from "@/hooks/useSmartViews";
 import { FocusMode } from "./FocusMode";
+import { AiTaskSuggestions } from "./AiTaskSuggestions";
 
 interface SmartViewsProps {
   onTaskClick: (task: Task) => void;
 }
 
 export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
-  const { tasks, isLoading, updateTask } = useTasks();
+  const { tasks, isLoading, updateTask, refetch } = useTasks();
   const { smartViews } = useSmartViews(tasks);
   const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
   const [focusTask, setFocusTask] = useState<Task | null>(null);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+
+  const handleTaskCreated = () => {
+    refetch();
+  };
 
   const handleTaskStatusToggle = (task: Task) => {
     const isCompleting = !(task.completed || task.status === TaskStatus.COMPLETED);
@@ -111,6 +116,13 @@ export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
         <h2 className="text-2xl font-bold text-gray-900 mb-2">智能视图</h2>
         <p className="text-gray-600">基于精力和情境的任务分类</p>
       </div>
+
+      {/* AI Task Suggestions */}
+      <AiTaskSuggestions
+        currentTask={focusTask}
+        recentTasks={tasks?.slice(0, 10)}
+        onTaskCreated={handleTaskCreated}
+      />
 
       {/* Smart Views Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
