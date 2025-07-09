@@ -93,11 +93,41 @@ serve(async (req) => {
       throw new Error(`Failed to fetch tasks from database: ${tasksError.message}`);
     }
 
+    // Query completed tasks for analysis (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { data: completedTasks, error: completedError } = await supabase
+      .from('tasks')
+      .select(`
+        id,
+        title,
+        description,
+        priority,
+        estimated_time,
+        actual_time,
+        energy_level,
+        context_tags,
+        tags,
+        created_at,
+        updated_at
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .gte('updated_at', thirtyDaysAgo.toISOString())
+      .order('updated_at', { ascending: false })
+      .limit(20);
+
+    if (completedError) {
+      console.error('Error fetching completed tasks:', completedError);
+      // Continue without completed tasks analysis
+    }
+
     const userTimezone = timezone || 'Asia/Shanghai';
     const currentTime = new Date().toISOString();
     
     // 分析当前任务类型并生成相关建议
-    const systemPrompt = `你是一个智能任务建议助手。根据用户当前的任务和所有待完成的任务，生成5个相关的任务建议。
+    const systemPrompt = `你是一个智能任务建议助手。根据用户当前的任务、所有待完成的任务以及已完成任务的模式，生成2个相关的任务建议。
 
 当前任务信息：
 ${currentTask ? `
@@ -117,9 +147,22 @@ ${index + 1}. ${task.title} (${task.status})
    - 标签: ${task.tags?.join(', ') || '无'}
    - 上下文: ${task.context_tags?.join(', ') || '无'}
    - 预估时间: ${task.estimated_time || '未设置'}分钟
+   - 实际用时: ${task.actual_time || '未设置'}分钟
+   - 当前进度: ${task.current_time_minutes || 0}分钟
    - 描述: ${task.description || '无'}
    - 截止时间: ${task.due_date ? new Date(task.due_date).toLocaleString('zh-CN', { timeZone: userTimezone }) : '未设置'}
 `).join('') || '无待完成任务'}
+
+已完成任务分析 (最近30天，共${completedTasks?.length || 0}个)：
+${completedTasks?.map((task: any, index: number) => `
+${index + 1}. ${task.title}
+   - 优先级: ${task.priority}, 能量级别: ${task.energy_level || '未设置'}
+   - 标签: ${task.tags?.join(', ') || '无'}
+   - 上下文: ${task.context_tags?.join(', ') || '无'}
+   - 预估时间: ${task.estimated_time || '未设置'}分钟
+   - 实际用时: ${task.actual_time || '未设置'}分钟
+   - 时间准确度: ${task.estimated_time && task.actual_time ? `${((task.estimated_time / task.actual_time) * 100).toFixed(1)}%` : '未知'}
+`).join('') || '无已完成任务数据'}
 
 最近任务历史：
 ${recentTasks?.map((task: any, index: number) => `
@@ -128,28 +171,34 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
    上下文: ${task.contextTags?.join(', ') || '无'}
 `).join('') || '无最近任务'}
 
-请根据以上信息生成相关的任务建议。建议应该：
-1. 优先考虑与当前任务相关的子任务、后续任务或支持任务
-2. 从待完成任务中识别出可以现在处理的高优先级任务
-3. 考虑用户的能量级别和上下文，推荐适合当前时间和状态的任务
-4. 提供不同类型的任务建议（深度工作、碎片时间、会议准备等）
-5. 考虑任务的依赖关系和时间安排
-6. 包含合适的时间估算和上下文标签
+基于以上信息，请分析用户的工作模式并生成任务建议。建议应该：
+1. 参考已完成任务的时间模式、优先级偏好和成功率
+2. 从待完成任务中选择最合适的任务进行推荐
+3. 考虑用户的能量级别和上下文偏好
+4. 分析用户的时间估算准确性，提供更现实的时间建议
+5. 优先推荐与当前任务相关或具有相似特征的任务
+6. 考虑任务的紧急程度和重要性
 
-请按照相关性和重要性排序，严格只返回2个最相关的建议。不要返回超过2个建议。
+**重要：建议的任务必须是从待完成任务列表中选择的，不能创建新任务。**
+
+请按照相关性和重要性排序，严格只返回2个最相关的建议。
 
 返回格式为JSON数组，每个建议包含：
-- title: 任务标题
+- title: 任务标题（必须来自待完成任务列表）
 - description: 任务描述（可选）
 - priority: 优先级 ('urgent', 'high', 'medium', 'low')
 - energyLevel: 能量级别 ('high', 'medium', 'low')
 - contextTags: 上下文标签数组
-- estimatedTime: 预估时间（分钟）
+- estimatedTime: 预估时间（分钟，基于历史数据调整）
 - tags: 相关标签数组
-- reason: 推荐理由（简短说明为什么现在推荐这个任务）
-- source: 建议来源 ('current_task', 'pending_tasks', 'optimization', 'new_suggestion')
+- reason: 推荐理由（说明为什么现在推荐这个任务，包括基于历史数据的分析）
+- source: 建议来源 ('pending_tasks', 'priority_based', 'pattern_based', 'context_based')
+- taskId: 对应待完成任务的ID（如果适用）
 
-重要提醒：严格限制只返回2个建议，按重要性和相关性排序后选择前2个。
+重要提醒：
+1. 严格限制只返回2个建议
+2. 建议的任务必须来自待完成任务列表
+3. 基于已完成任务的模式来优化建议的准确性
 
 当前用户时区：${userTimezone}
 当前时间：${currentTime}
@@ -253,15 +302,56 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
         estimatedTime: typeof suggestion.estimatedTime === 'number' ? suggestion.estimatedTime : 30,
         tags: Array.isArray(suggestion.tags) ? suggestion.tags : [],
         reason: suggestion.reason || '基于相关任务推荐',
-        source: suggestion.source || 'new_suggestion'
+        source: suggestion.source || 'pending_tasks',
+        taskId: suggestion.taskId || null
       }));
       
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       console.error('Content that failed to parse:', content);
       
-      // Fallback: generate generic suggestions
-      suggestions = [
+      // Fallback: generate generic suggestions based on pending tasks
+      const fallbackSuggestions = [];
+      
+      if (allTasks && allTasks.length > 0) {
+        // Pick the highest priority pending task
+        const highPriorityTask = allTasks.find(task => task.priority === 'urgent' || task.priority === 'high') || allTasks[0];
+        fallbackSuggestions.push({
+          title: highPriorityTask.title,
+          description: highPriorityTask.description || '',
+          priority: highPriorityTask.priority,
+          energyLevel: highPriorityTask.energy_level || 'medium',
+          contextTags: highPriorityTask.context_tags || [],
+          estimatedTime: highPriorityTask.estimated_time || 30,
+          tags: highPriorityTask.tags || [],
+          reason: '基于优先级推荐的待完成任务',
+          source: 'pending_tasks',
+          taskId: highPriorityTask.id
+        });
+        
+        // Pick another task with different characteristics
+        const otherTask = allTasks.find(task => 
+          task.id !== highPriorityTask.id && 
+          (task.energy_level !== highPriorityTask.energy_level || task.priority !== highPriorityTask.priority)
+        ) || allTasks[1];
+        
+        if (otherTask) {
+          fallbackSuggestions.push({
+            title: otherTask.title,
+            description: otherTask.description || '',
+            priority: otherTask.priority,
+            energyLevel: otherTask.energy_level || 'medium',
+            contextTags: otherTask.context_tags || [],
+            estimatedTime: otherTask.estimated_time || 30,
+            tags: otherTask.tags || [],
+            reason: '基于任务多样性推荐',
+            source: 'pending_tasks',
+            taskId: otherTask.id
+          });
+        }
+      }
+      
+      suggestions = fallbackSuggestions.length > 0 ? fallbackSuggestions : [
         {
           title: '整理任务清单',
           description: '回顾和整理当前的任务清单',
@@ -271,7 +361,8 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
           estimatedTime: 15,
           tags: ['整理', '回顾'],
           reason: '定期整理有助于提高效率',
-          source: 'optimization'
+          source: 'optimization',
+          taskId: null
         },
         {
           title: '计划下一步工作',
@@ -282,7 +373,8 @@ ${index + 1}. ${task.title} (${task.priority}优先级, ${task.energyLevel}能�
           estimatedTime: 30,
           tags: ['计划', '工作'],
           reason: '良好的计划是成功的基础',
-          source: 'optimization'
+          source: 'optimization',
+          taskId: null
         }
       ];
     }

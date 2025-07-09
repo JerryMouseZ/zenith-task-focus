@@ -10,7 +10,8 @@ import { FRAGMENT_TIME_TASKS } from '@/types/smartViews';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskOperations } from '@/hooks/useTaskOperations';
 import { useSmartViews } from '@/hooks/useSmartViews';
-import { Play, Pause, Square, BookOpen, Clock, AlertCircle, Search, Plus } from 'lucide-react';
+import { Play, Pause, Square, BookOpen, Clock, AlertCircle, Search, Plus, CheckCircle } from 'lucide-react';
+import { CompletionCelebration } from './CompletionCelebration';
 
 interface FocusSession {
   taskId: string;
@@ -39,6 +40,7 @@ export const FocusMode = ({ task, isOpen, onClose, onTaskSwitch }: FocusModeProp
   const [blockingSearch, setBlockingSearch] = useState('');
   const [showBlockingArea, setShowBlockingArea] = useState(false);
   const [showFragmentTasks, setShowFragmentTasks] = useState(false);
+  const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
 
   const { updateTask } = useTaskOperations();
   const { tasks } = useTasks();
@@ -215,6 +217,44 @@ export const FocusMode = ({ task, isOpen, onClose, onTaskSwitch }: FocusModeProp
     }
   };
 
+  const handleTaskComplete = () => {
+    if (!task) return;
+    
+    // 记录实际完成时间
+    const actualTime = session 
+      ? Math.round((selectedDuration * 60 - timeRemaining) / 60) + (task.currentTime || 0)
+      : (task.currentTime || 0);
+    
+    // 更新任务状态为完成
+    updateTask(task.id, {
+      status: TaskStatus.COMPLETED,
+      actualTime: actualTime,
+      completed: true
+    });
+    
+    // 显示庆祝界面
+    setShowCompletionCelebration(true);
+    
+    // 重置session
+    resetSession();
+  };
+
+  const handleCelebrationClose = () => {
+    setShowCompletionCelebration(false);
+    onClose(); // 关闭专注模式
+  };
+
+  const handleTakeBreak = () => {
+    setShowCompletionCelebration(false);
+    onClose(); // 关闭专注模式，用户可以休息
+  };
+
+  const handleNextTask = () => {
+    setShowCompletionCelebration(false);
+    // 可以在这里添加选择下一个任务的逻辑
+    onClose(); // 暂时关闭，用户可以选择下一个任务
+  };
+
   const handleFragmentTaskSelect = (fragmentTask: any) => {
     // 可以在这里处理碎片时间任务的选择
     console.log('Selected fragment task:', fragmentTask);
@@ -314,6 +354,10 @@ export const FocusMode = ({ task, isOpen, onClose, onTaskSwitch }: FocusModeProp
                           继续
                         </Button>
                       )}
+                      <Button onClick={handleTaskComplete} className="bg-blue-500 hover:bg-blue-600">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        完成任务
+                      </Button>
                       <Button onClick={endFocus} variant="destructive">
                         <Square className="w-4 h-4 mr-2" />
                         结束
@@ -499,6 +543,17 @@ export const FocusMode = ({ task, isOpen, onClose, onTaskSwitch }: FocusModeProp
           </div>
         </div>
       </DialogContent>
+      
+      {/* 完成庆祝弹窗 */}
+      <CompletionCelebration
+        isOpen={showCompletionCelebration}
+        onClose={handleCelebrationClose}
+        onTakeBreak={handleTakeBreak}
+        onNextTask={handleNextTask}
+        taskTitle={task.title}
+        actualTime={task.actualTime}
+        estimatedTime={task.estimatedTime}
+      />
     </Dialog>
   );
 };
