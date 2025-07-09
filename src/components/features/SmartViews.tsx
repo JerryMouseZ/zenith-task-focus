@@ -1,18 +1,42 @@
 import { useState } from "react";
 import { TaskCard } from "./TaskCard";
-import { Task } from "@/types/task";
+import { Task, TaskStatus } from "@/types/task";
 import { SmartView } from "@/types/smartViews";
 import { useTasks } from "@/hooks/useTasks";
 import { useSmartViews } from "@/hooks/useSmartViews";
+import { FocusMode } from "./FocusMode";
 
 interface SmartViewsProps {
   onTaskClick: (task: Task) => void;
 }
 
 export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
-  const { tasks, isLoading } = useTasks();
+  const { tasks, isLoading, updateTask } = useTasks();
   const { smartViews } = useSmartViews(tasks);
   const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
+  const [focusTask, setFocusTask] = useState<Task | null>(null);
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+
+  const handleTaskStatusToggle = (task: Task) => {
+    const isCompleting = !(task.completed || task.status === TaskStatus.COMPLETED);
+    updateTask({
+      id: task.id,
+      updates: {
+        status: isCompleting ? TaskStatus.COMPLETED : TaskStatus.TODO,
+        completed: isCompleting,
+      }
+    });
+  };
+
+  const handleFocusStart = (task: Task) => {
+    setFocusTask(task);
+    setIsFocusModeOpen(true);
+  };
+
+  const handleFocusModeClose = () => {
+    setIsFocusModeOpen(false);
+    setFocusTask(null);
+  };
 
   if (isLoading) {
     return (
@@ -55,6 +79,10 @@ export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
                 key={task.id}
                 task={task}
                 onClick={() => onTaskClick(task)}
+                showCheckbox
+                checked={task.status === TaskStatus.COMPLETED}
+                onStatusToggle={handleTaskStatusToggle}
+                onFocusStart={handleFocusStart}
               />
             ))}
             {selectedView.tasks.length === 0 && (
@@ -87,6 +115,7 @@ export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
             view={view}
             onViewClick={() => setSelectedViewId(view.id)}
             onTaskClick={onTaskClick}
+            onFocusStart={handleFocusStart}
           />
         ))}
       </div>
@@ -99,6 +128,13 @@ export const SmartViews = ({ onTaskClick }: SmartViewsProps) => {
           <p className="text-sm">创建你的第一个任务，开始使用智能视图</p>
         </div>
       )}
+
+      {/* Focus Mode Modal */}
+      <FocusMode
+        task={focusTask}
+        isOpen={isFocusModeOpen}
+        onClose={handleFocusModeClose}
+      />
     </div>
   );
 };
@@ -107,9 +143,10 @@ interface SmartViewCardProps {
   view: SmartView;
   onViewClick: () => void;
   onTaskClick: (task: Task) => void;
+  onFocusStart: (task: Task) => void;
 }
 
-const SmartViewCard = ({ view, onViewClick, onTaskClick }: SmartViewCardProps) => {
+const SmartViewCard = ({ view, onViewClick, onTaskClick, onFocusStart }: SmartViewCardProps) => {
   const maxPreviewTasks = 3;
   const previewTasks = view.tasks.slice(0, maxPreviewTasks);
   const remainingCount = view.count - maxPreviewTasks;
@@ -140,26 +177,48 @@ const SmartViewCard = ({ view, onViewClick, onTaskClick }: SmartViewCardProps) =
           <div
             key={task.id}
             className="bg-white bg-opacity-60 rounded-md p-2 text-sm hover:bg-opacity-80 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onTaskClick(task);
-            }}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-800 truncate flex-1">
+              <span 
+                className="font-medium text-gray-800 truncate flex-1 cursor-pointer hover:text-gray-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTaskClick(task);
+                }}
+              >
                 {task.title}
               </span>
-              {task.estimatedTime && (
-                <span className="text-xs text-gray-500 ml-2">
-                  {task.estimatedTime}分
-                </span>
+              <div className="flex items-center gap-2 ml-2">
+                {task.estimatedTime && (
+                  <span className="text-xs text-gray-500">
+                    {task.estimatedTime}分
+                  </span>
+                )}
+                {task.status !== TaskStatus.COMPLETED && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFocusStart(task);
+                    }}
+                    className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                  >
+                    专注
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              {task.dueDate && (
+                <div className="text-xs text-gray-500">
+                  {task.dueDate.toLocaleDateString()}
+                </div>
+              )}
+              {task.currentTime && (
+                <div className="text-xs text-blue-600">
+                  已专注 {task.currentTime}分钟
+                </div>
               )}
             </div>
-            {task.dueDate && (
-              <div className="text-xs text-gray-500 mt-1">
-                {task.dueDate.toLocaleDateString()}
-              </div>
-            )}
           </div>
         ))}
 

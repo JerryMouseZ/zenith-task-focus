@@ -12,26 +12,18 @@ interface CalendarViewProps {
 
 type ViewMode = "day" | "week" | "month";
 
-type CalendarMode = "start" | "due"; // 新增：区分开始/截止时间视图
-
 export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
   const isMobile = useIsMobile();
 
-  // 默认展示开始时间视图
-  const [calendarMode, setCalendarMode] = useState<CalendarMode>("start"); // "start" | "due"
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [currentDate, setCurrentDate] = useState(new Date());
   const { tasks, isLoading } = useTasks();
 
   const hours = Array.from({ length: 14 }, (_, i) => i + 8);
 
-  // 根据模式过滤任务
+  // 过滤任务，只显示有截止日期的任务
   const filteredTasks = tasks.filter(task => {
-    if (calendarMode === "start") {
-      return task.startTime && !task.completed;
-    } else {
-      return task.dueDate && !task.completed;
-    }
+    return task.dueDate && !task.completed;
   });
 
   const renderDayView = () => (
@@ -55,24 +47,24 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             <div key={hour} className={`${isMobile ? "h-12" : "h-16"} border-b border-border relative hover:bg-muted/20 cursor-pointer`}>
               {filteredTasks
                 .filter(task => {
-                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                  return date &&
-                    date.toDateString() === currentDate.toDateString() &&
-                    date.getHours() === hour;
+                  return task.dueDate &&
+                    task.dueDate.toDateString() === currentDate.toDateString() &&
+                    task.dueDate.getHours() === hour;
                 })
                 .map(task => {
-                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
                   return (
                     <div
                       key={task.id}
                       onClick={() => onTaskClick(task)}
-                      className="absolute left-2 right-2 top-1 bg-red-100 border-l-4 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200 break-words whitespace-normal"
+                      className={`absolute left-2 right-2 top-1 p-1 rounded text-xs cursor-pointer hover:bg-opacity-80 break-words whitespace-normal ${
+                        task.isFixedTime 
+                          ? 'bg-blue-100 border-l-4 border-blue-500 text-blue-800' 
+                          : 'bg-red-100 border-l-4 border-red-500 text-red-800'
+                      }`}
                     >
                       <div className="font-medium break-words whitespace-normal">{task.title}</div>
                       <div className="text-muted-foreground">
-                        {calendarMode === "start"
-                          ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
-                          : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                        截止: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   );
@@ -113,24 +105,24 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
               <div key={hour} className="h-12 border-b border-border border-l border-border relative hover:bg-muted/20 cursor-pointer">
                 {filteredTasks
                   .filter(task => {
-                    const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                    return date &&
-                      date.toDateString() === day.toDateString() &&
-                      date.getHours() === hour;
+                    return task.dueDate &&
+                      task.dueDate.toDateString() === day.toDateString() &&
+                      task.dueDate.getHours() === hour;
                   })
                 .map(task => {
-                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
                   return (
                     <div
                       key={task.id}
                       onClick={() => onTaskClick(task)}
-                      className="absolute inset-1 bg-red-100 border-l-2 border-red-500 p-1 rounded text-xs cursor-pointer hover:bg-red-200 break-words whitespace-normal"
+                      className={`absolute inset-1 p-1 rounded text-xs cursor-pointer hover:bg-opacity-80 break-words whitespace-normal ${
+                        task.isFixedTime 
+                          ? 'bg-blue-100 border-l-2 border-blue-500 text-blue-800' 
+                          : 'bg-red-100 border-l-2 border-red-500 text-red-800'
+                      }`}
                     >
                       <div className="font-medium break-words whitespace-normal">{task.title}</div>
                       <div className="text-muted-foreground text-xs">
-                        {calendarMode === "start"
-                          ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
-                          : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                        截止: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   );
@@ -172,40 +164,36 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
             <div className="space-y-1">
               {filteredTasks
                 .filter(task => {
-                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                  return date && date.toDateString() === day.toDateString();
+                  return task.dueDate && task.dueDate.toDateString() === day.toDateString();
                 })
                 .slice(0, 3)
                 .map(task => {
-                  const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                  const isOver = date && date < new Date() && task.status !== TaskStatus.COMPLETED;
+                  const isOver = task.dueDate && task.dueDate < new Date() && task.status !== TaskStatus.COMPLETED;
                   return (
                     <div
                       key={task.id}
                       onClick={() => onTaskClick(task)}
                       className={`text-xs px-1 py-0.5 rounded cursor-pointer hover:opacity-80 ${
-                        isOver
-                          ? 'bg-red-100 text-red-800 border border-red-300'
-                          : 'bg-orange-100 text-orange-800 border border-orange-300'
+                        task.isFixedTime
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                          : (isOver
+                              ? 'bg-red-100 text-red-800 border border-red-300'
+                              : 'bg-orange-100 text-orange-800 border border-orange-300')
                       }`}
                     >
                       <div className="truncate font-medium">{task.title}</div>
                       <div className="text-xs opacity-75">
-                        {calendarMode === "start"
-                          ? `开始: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
-                          : `截止: ${date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                        截止: {task.dueDate?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   );
                 })}
               {filteredTasks.filter(task => {
-                const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                return date && date.toDateString() === day.toDateString();
+                return task.dueDate && task.dueDate.toDateString() === day.toDateString();
               }).length > 3 && (
                 <div className="text-xs text-muted-foreground">
                   +{filteredTasks.filter(task => {
-                    const date = calendarMode === "start" ? task.startTime : task.dueDate;
-                    return date && date.toDateString() === day.toDateString();
+                    return task.dueDate && task.dueDate.toDateString() === day.toDateString();
                   }).length - 3} 更多
                 </div>
               )}
@@ -230,23 +218,6 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-semibold">日历</h1>
           <div className="flex items-center gap-2">
-            {/* 新增：切换开始/截止时间模式 */}
-          <Button
-              variant={calendarMode === "start" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCalendarMode("start")}
-              className={calendarMode === "start" ? "bg-green-500 text-white" : ""}
-            >
-              开始时间视图
-            </Button>
-            <Button
-              variant={calendarMode === "due" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCalendarMode("due")}
-              className={calendarMode === "due" ? "bg-green-500 text-white" : ""}
-            >
-              截止时间视图
-            </Button>
             {/* For mobile, hide week/month view buttons */}
             {!isMobile && (
               <>
@@ -280,17 +251,19 @@ export const CalendarView = ({ onTaskClick }: CalendarViewProps) => {
         </div>
       </div>
 
-      {/* 视图说明，根据模式变化 */}
+      {/* 视图说明 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
         <div className="flex items-center gap-2 text-blue-800">
-          <div className="w-3 h-3 bg-orange-500 rounded"></div>
-          <span className="text-sm font-medium">{calendarMode === "start" ? "即将开始" : "到期任务"}</span>
+          <div className="w-3 h-3 bg-blue-500 rounded"></div>
+          <span className="text-sm font-medium">固定时间任务</span>
+          <div className="w-3 h-3 bg-orange-500 rounded ml-4"></div>
+          <span className="text-sm font-medium">到期任务</span>
           <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
-          <span className="text-sm font-medium">{calendarMode === "start" ? "已过开始时间" : "逾期任务"}</span>
+          <span className="text-sm font-medium">逾期任务</span>
         </div>
         <p className="text-sm text-blue-700 mt-1">
-          日历根据任务{calendarMode === "start" ? "开始时间" : "截止日期"}显示任务。
-          橙色表示即将{calendarMode === "start" ? "开始" : "到期"}，红色表示已{calendarMode === "start" ? "过开始时间" : "逾期"}任务。
+          日历根据任务截止日期显示任务。
+          蓝色表示固定时间任务，橙色表示即将到期，红色表示已逾期任务。
         </p>
       </div>
       <Card className="p-4">

@@ -1,5 +1,6 @@
-import { Clock, Calendar, Lock, Zap } from "lucide-react";
+import { Clock, Calendar, Lock, Zap, Play } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
 import { differenceInCalendarDays } from "date-fns";
@@ -12,10 +13,11 @@ interface TaskCardProps {
   showCheckbox?: boolean;
   checked?: boolean;
   onStatusToggle?: (task: Task) => void;
+  onFocusStart?: (task: Task) => void;
   className?: string;
 }
 
-export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatusToggle, className }: TaskCardProps) => {
+export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatusToggle, onFocusStart, className }: TaskCardProps) => {
   const formatDueDate = (date: Date) => {
     const now = new Date();
     // Use calendar day difference to avoid timezone-related rounding issues
@@ -84,6 +86,20 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
                 {getEnergyLevelLabel(task.energyLevel)}
               </Badge>
             )}
+            {onFocusStart && task.status !== TaskStatus.COMPLETED && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFocusStart(task);
+                }}
+                className="text-xs h-6 px-2 hover:bg-green-50 hover:text-green-700 hover:border-green-300"
+              >
+                <Play className="w-3 h-3 mr-1" />
+                专注
+              </Button>
+            )}
           </div>
         </div>
         {/* 移动端隐藏描述，桌面端显示 */}
@@ -103,7 +119,13 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
             {task.estimatedTime && (
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <Clock className="w-3 h-3" />
-                {task.estimatedTime}m
+                预计{task.estimatedTime}m
+              </div>
+            )}
+            {task.currentTime && (
+              <div className="flex items-center gap-1 text-xs text-blue-600">
+                <Clock className="w-3 h-3" />
+                已专注{task.currentTime}m
               </div>
             )}
           </div>

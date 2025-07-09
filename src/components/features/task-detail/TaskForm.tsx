@@ -256,85 +256,85 @@ export const TaskForm: React.FC<TaskFormProps> = ({
         </div>
       )}
 
-      {/* Due Date and Start Time */}
+      {/* Due Date */}
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-2 block">
+          截止时间
+        </label>
+        {isEditing ? (
+          <Input
+            type="datetime-local"
+            value={editedTask.dueDate ? editedTask.dueDate.toISOString().slice(0, 16) : ""}
+            onChange={(e) => onTaskChange({ 
+              dueDate: e.target.value ? new Date(e.target.value) : undefined 
+            })}
+          />
+        ) : (
+          <span className="text-gray-600">
+            {editedTask.dueDate ? editedTask.dueDate.toLocaleString() : "无截止时间"}
+          </span>
+        )}
+      </div>
+
+      {/* Estimated Time and Current Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium text-gray-700 mb-2 block">
-            截止时间
+            预估时间
           </label>
           {isEditing ? (
-            <Input
-              type="datetime-local"
-              value={editedTask.dueDate ? editedTask.dueDate.toISOString().slice(0, 16) : ""}
-              onChange={(e) => onTaskChange({ 
-                dueDate: e.target.value ? new Date(e.target.value) : undefined 
-              })}
-            />
+            <div className="flex gap-2 items-center">
+              <Input
+                type="number"
+                min={0}
+                value={estimatedDays}
+                onChange={(e) => onEstimatedDaysChange(parseInt(e.target.value) || 0)}
+                placeholder="天"
+                className="w-20"
+              />
+              <span>天</span>
+              <Input
+                type="number"
+                min={0}
+                max={23}
+                value={estimatedHours}
+                onChange={(e) => {
+                  let hours = parseInt(e.target.value) || 0;
+                  if (hours > 23) hours = 23;
+                  onEstimatedHoursChange(hours);
+                }}
+                placeholder="小时"
+                className="w-20"
+              />
+              <span>小时</span>
+            </div>
           ) : (
             <span className="text-gray-600">
-              {editedTask.dueDate ? editedTask.dueDate.toLocaleString() : "无截止时间"}
+              {editedTask.estimatedTime && editedTask.estimatedTime > 0
+                ? `${Math.floor(editedTask.estimatedTime / 1440)} 天 ${Math.floor((editedTask.estimatedTime % 1440) / 60)} 小时`
+                : "未预估"}
             </span>
           )}
         </div>
 
         <div>
           <label className="text-sm font-medium text-gray-700 mb-2 block">
-            开始时间
+            已专注时间（分钟）
           </label>
           {isEditing ? (
             <Input
-              type="datetime-local"
-              value={editedTask.startTime ? editedTask.startTime.toISOString().slice(0, 16) : ""}
-              onChange={(e) => onTaskChange({ 
-                startTime: e.target.value ? new Date(e.target.value) : undefined 
-              })}
+              type="number"
+              min={0}
+              value={editedTask.currentTime || 0}
+              onChange={(e) => onTaskChange({ currentTime: parseInt(e.target.value) || 0 })}
+              placeholder="已专注的分钟数"
             />
           ) : (
             <span className="text-gray-600">
-              {editedTask.startTime ? editedTask.startTime.toLocaleString() : "无开始时间"}
+              {editedTask.currentTime ? `${editedTask.currentTime} 分钟` : "0 分钟"}
             </span>
           )}
         </div>
-      </div>
-
-      {/* Estimated Time */}
-      <div>
-        <label className="text-sm font-medium text-gray-700 mb-2 block">
-          预估时间
-        </label>
-        {isEditing ? (
-          <div className="flex gap-2 items-center">
-            <Input
-              type="number"
-              min={0}
-              value={estimatedDays}
-              onChange={(e) => onEstimatedDaysChange(parseInt(e.target.value) || 0)}
-              placeholder="天"
-              className="w-20"
-            />
-            <span>天</span>
-            <Input
-              type="number"
-              min={0}
-              max={23}
-              value={estimatedHours}
-              onChange={(e) => {
-                let hours = parseInt(e.target.value) || 0;
-                if (hours > 23) hours = 23;
-                onEstimatedHoursChange(hours);
-              }}
-              placeholder="小时"
-              className="w-20"
-            />
-            <span>小时</span>
-          </div>
-        ) : (
-          <span className="text-gray-600">
-            {editedTask.estimatedTime && editedTask.estimatedTime > 0
-              ? `${Math.floor(editedTask.estimatedTime / 1440)} 天 ${Math.floor((editedTask.estimatedTime % 1440) / 60)} 小时`
-              : "未预估"}
-          </span>
-        )}
       </div>
 
       {/* Recurrence Settings */}

@@ -12,14 +12,13 @@ export function transformDatabaseTaskToTask(dbTask: DatabaseTask): Task {
     status: dbTask.status as TaskStatus,
     priority: dbTask.priority as TaskPriority,
     dueDate: dbTask.due_date ? new Date(dbTask.due_date) : undefined,
-    startTime: dbTask.start_time ? new Date(dbTask.start_time) : undefined,
-    endTime: dbTask.end_time ? new Date(dbTask.end_time) : undefined,
     isFixedTime: dbTask.is_fixed_time,
     createdAt: new Date(dbTask.created_at),
     updatedAt: new Date(dbTask.updated_at),
     tags: dbTask.tags || [],
     estimatedTime: dbTask.estimated_time,
     actualTime: dbTask.actual_time,
+    currentTime: dbTask.current_time || 0,
     projectId: dbTask.project_id,
     parentId: dbTask.parent_id,
     completed: dbTask.completed ?? false,
@@ -60,11 +59,10 @@ export function transformTaskToCreateData(
     status: task.status,
     priority: task.priority,
     due_date: task.dueDate?.toISOString() || null,
-    start_time: task.startTime?.toISOString() || null,
-    end_time: task.endTime?.toISOString() || null,
     is_fixed_time: task.isFixedTime || false,
     estimated_time: task.estimatedTime || null,
     actual_time: task.actualTime || null,
+    current_time: task.currentTime || 0,
     tags: task.tags || [],
     project_id: task.projectId || null,
     parent_id: task.parentId || null,
@@ -89,11 +87,10 @@ export function transformTaskToUpdateData(updates: Partial<Task>): TaskUpdateDat
   if (updates.status !== undefined) updateData.status = updates.status;
   if (updates.priority !== undefined) updateData.priority = updates.priority;
   if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate?.toISOString() || null;
-  if (updates.startTime !== undefined) updateData.start_time = updates.startTime?.toISOString() || null;
-  if (updates.endTime !== undefined) updateData.end_time = updates.endTime?.toISOString() || null;
   if (updates.isFixedTime !== undefined) updateData.is_fixed_time = updates.isFixedTime;
   if (updates.estimatedTime !== undefined) updateData.estimated_time = updates.estimatedTime;
   if (updates.actualTime !== undefined) updateData.actual_time = updates.actualTime;
+  if (updates.currentTime !== undefined) updateData.current_time = updates.currentTime;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
   if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
   if (updates.parentId !== undefined) updateData.parent_id = updates.parentId;

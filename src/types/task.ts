@@ -7,12 +7,11 @@ export interface Task extends BaseEntity {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: Date;
-  startTime?: Date;
-  endTime?: Date;
   isFixedTime?: boolean;
   tags: string[];
   estimatedTime?: number; // in minutes
   actualTime?: number; // in minutes
+  currentTime?: number; // in minutes - 当前已进行的时间
   subtasks: Subtask[];
   projectId?: string;
   parentId?: string;

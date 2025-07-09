@@ -27,6 +27,7 @@ export const useTaskForm = ({ initialTask, defaultValues, onReset }: UseTaskForm
     recurrence_end_date: undefined,
     energyLevel: EnergyLevel.MEDIUM,
     contextTags: ['@电脑前'],
+    currentTime: 0,
     ...defaultValues,
   }), [defaultValues]);
 

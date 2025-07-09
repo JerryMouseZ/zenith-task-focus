@@ -1,10 +1,12 @@
 
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Task, TaskStatus } from "@/types/task";
 import { useTasks } from "@/hooks/useTasks";
 import { useTaskFilters } from "@/hooks/useTaskFilters";
 import { TaskFilters } from "./task-list/TaskFilters";
 import { TaskCard } from "./TaskCard";
+import { FocusMode } from "./FocusMode";
 
 interface TaskListViewProps {
   onTaskClick: (task: Task) => void;
@@ -12,6 +14,8 @@ interface TaskListViewProps {
 
 export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
   const { tasks, isLoading, updateTask } = useTasks();
+  const [focusTask, setFocusTask] = useState<Task | null>(null);
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
 
   const {
     searchTerm,
@@ -42,6 +46,16 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
         completed: isCompleting,
       }
     });
+  };
+
+  const handleFocusStart = (task: Task) => {
+    setFocusTask(task);
+    setIsFocusModeOpen(true);
+  };
+
+  const handleFocusModeClose = () => {
+    setIsFocusModeOpen(false);
+    setFocusTask(null);
   };
 
   if (isLoading) {
@@ -83,6 +97,7 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
             showCheckbox
             checked={task.status === TaskStatus.COMPLETED}
             onStatusToggle={handleTaskStatusToggle}
+            onFocusStart={handleFocusStart}
           />
         ))}
       </div>
@@ -94,6 +109,13 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
           </p>
         </Card>
       )}
+
+      {/* Focus Mode Modal */}
+      <FocusMode
+        task={focusTask}
+        isOpen={isFocusModeOpen}
+        onClose={handleFocusModeClose}
+      />
     </div>
   );
 };

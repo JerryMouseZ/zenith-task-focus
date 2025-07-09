@@ -10,11 +10,10 @@ export interface DatabaseTask {
   status: string;
   priority: string;
   due_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
   is_fixed_time: boolean;
   estimated_time: number | null;
   actual_time: number | null;
+  current_time: number | null;
   tags: string[] | null;
   project_id: string | null;
   parent_id: string | null;
@@ -43,11 +42,10 @@ export interface TaskCreateData {
   status: string;
   priority: string;
   due_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
   is_fixed_time: boolean;
   estimated_time: number | null;
   actual_time: number | null;
+  current_time: number | null;
   tags: string[];
   project_id: string | null;
   parent_id: string | null;
@@ -64,11 +62,10 @@ export interface TaskUpdateData {
   status?: string;
   priority?: string;
   due_date?: string | null;
-  start_time?: string | null;
-  end_time?: string | null;
   is_fixed_time?: boolean;
   estimated_time?: number | null;
   actual_time?: number | null;
+  current_time?: number | null;
   tags?: string[];
   project_id?: string | null;
   parent_id?: string | null;
