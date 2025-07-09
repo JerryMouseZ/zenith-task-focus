@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Task, TaskPriority, TaskStatus } from "@/types/task";
+import { Task, TaskPriority, TaskStatus, EnergyLevel } from "@/types/task";
 import { TIME_CONSTANTS } from "@/constants/app.constants";
 
 interface UseTaskFormProps {
@@ -25,6 +25,8 @@ export const useTaskForm = ({ initialTask, defaultValues, onReset }: UseTaskForm
     isFixedTime: false,
     recurrence: 'none' as const,
     recurrence_end_date: undefined,
+    energyLevel: EnergyLevel.MEDIUM,
+    contextTags: ['@电脑前'],
     ...defaultValues,
   }), [defaultValues]);
 

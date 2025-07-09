@@ -23,6 +23,8 @@ export interface DatabaseTask {
   completed?: boolean;
   recurrence?: string;
   recurrence_end_date?: string | null;
+  energy_level?: string;
+  context_tags?: string[] | null;
   subtasks?: DatabaseSubtask[];
 }
 
@@ -52,6 +54,8 @@ export interface TaskCreateData {
   completed: boolean;
   recurrence: string;
   recurrence_end_date: string | null;
+  energy_level: string;
+  context_tags: string[];
 }
 
 export interface TaskUpdateData {
@@ -71,5 +75,7 @@ export interface TaskUpdateData {
   completed?: boolean;
   recurrence?: string;
   recurrence_end_date?: string | null;
+  energy_level?: string;
+  context_tags?: string[];
   updated_at: string;
 }

@@ -1,4 +1,4 @@
-import { TaskStatus, TaskPriority } from "@/types/task";
+import { TaskStatus, TaskPriority, EnergyLevel } from "@/types/task";
 
 // Status utility functions
 export const getStatusLabel = (status: TaskStatus): string => {
@@ -70,6 +70,50 @@ export const priorityOptions = [
   { value: TaskPriority.LOW, label: "低" },
   { value: TaskPriority.MEDIUM, label: "中" },
   { value: TaskPriority.HIGH, label: "高" }
+];
+
+// Energy level utility functions
+export const getEnergyLevelLabel = (energyLevel: EnergyLevel): string => {
+  switch (energyLevel) {
+    case EnergyLevel.LOW:
+      return "低精力";
+    case EnergyLevel.MEDIUM:
+      return "中精力";
+    case EnergyLevel.HIGH:
+      return "高精力";
+    default:
+      return energyLevel;
+  }
+};
+
+export const getEnergyLevelColor = (energyLevel: EnergyLevel): string => {
+  switch (energyLevel) {
+    case EnergyLevel.LOW:
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case EnergyLevel.MEDIUM:
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case EnergyLevel.HIGH:
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+export const energyLevelOptions = [
+  { value: EnergyLevel.LOW, label: "低精力" },
+  { value: EnergyLevel.MEDIUM, label: "中精力" },
+  { value: EnergyLevel.HIGH, label: "高精力" }
+];
+
+// Common context tags
+export const COMMON_CONTEXT_TAGS = [
+  "@电脑前",
+  "@通勤路上", 
+  "@碎片时间",
+  "@会议室",
+  "@家中",
+  "@外出办事",
+  "@休息时间"
 ];
 
 // Time formatting utilities

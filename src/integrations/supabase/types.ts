@@ -84,10 +84,12 @@ export type Database = {
         Row: {
           actual_time: number | null
           completed: boolean
+          context_tags: string[] | null
           created_at: string
           description: string | null
           due_date: string | null
           end_time: string | null
+          energy_level: string
           estimated_time: number | null
           id: string
           is_fixed_time: boolean
@@ -107,10 +109,12 @@ export type Database = {
         Insert: {
           actual_time?: number | null
           completed?: boolean
+          context_tags?: string[] | null
           created_at?: string
           description?: string | null
           due_date?: string | null
           end_time?: string | null
+          energy_level?: string
           estimated_time?: number | null
           id?: string
           is_fixed_time?: boolean
@@ -130,10 +134,12 @@ export type Database = {
         Update: {
           actual_time?: number | null
           completed?: boolean
+          context_tags?: string[] | null
           created_at?: string
           description?: string | null
           due_date?: string | null
           end_time?: string | null
+          energy_level?: string
           estimated_time?: number | null
           id?: string
           is_fixed_time?: boolean

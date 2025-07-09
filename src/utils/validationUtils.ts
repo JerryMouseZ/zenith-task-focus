@@ -1,4 +1,4 @@
-import { Task, TaskStatus, TaskPriority } from "@/types/task";
+import { Task, TaskStatus, TaskPriority, EnergyLevel } from "@/types/task";
 
 /**
  * Validation utilities for task-related data
@@ -37,6 +37,11 @@ export const validateTask = (task: Partial<Task>): ValidationResult => {
     errors.push("无效的任务优先级");
   }
 
+  // Energy level validation
+  if (task.energyLevel && !Object.values(EnergyLevel).includes(task.energyLevel)) {
+    errors.push("无效的精力等级");
+  }
+
   // Date validation
   if (task.dueDate && task.startTime && task.dueDate < task.startTime) {
     errors.push("截止日期不能早于开始时间");
@@ -67,6 +72,22 @@ export const validateTask = (task: Partial<Task>): ValidationResult => {
       }
       if (tag.trim().length === 0) {
         errors.push("标签不能为空");
+      }
+    }
+  }
+
+  // Context tags validation
+  if (task.contextTags) {
+    if (task.contextTags.length > 10) {
+      errors.push("情境标签数量不能超过10个");
+    }
+    
+    for (const tag of task.contextTags) {
+      if (tag.length > 50) {
+        errors.push("单个情境标签长度不能超过50个字符");
+      }
+      if (tag.trim().length === 0) {
+        errors.push("情境标签不能为空");
       }
     }
   }

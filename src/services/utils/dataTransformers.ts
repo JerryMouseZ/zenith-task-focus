@@ -1,4 +1,4 @@
-import { Task, TaskStatus, TaskPriority, Subtask } from "@/types/task";
+import { Task, TaskStatus, TaskPriority, EnergyLevel, Subtask } from "@/types/task";
 import { DatabaseTask, DatabaseSubtask, TaskCreateData, TaskUpdateData } from "../types/database.types";
 
 /**
@@ -26,6 +26,9 @@ export function transformDatabaseTaskToTask(dbTask: DatabaseTask): Task {
     subtasks: dbTask.subtasks?.map(transformDatabaseSubtaskToSubtask) || [],
     recurrence: dbTask.recurrence || 'none',
     recurrence_end_date: dbTask.recurrence_end_date ? new Date(dbTask.recurrence_end_date) : undefined,
+    userId: dbTask.user_id,
+    energyLevel: (dbTask.energy_level as EnergyLevel) || EnergyLevel.MEDIUM,
+    contextTags: dbTask.context_tags || ['@电脑前'],
   };
 }
 
@@ -37,7 +40,9 @@ export function transformDatabaseSubtaskToSubtask(dbSubtask: DatabaseSubtask): S
     id: dbSubtask.id,
     title: dbSubtask.title,
     completed: dbSubtask.completed,
+    taskId: dbSubtask.task_id,
     createdAt: new Date(dbSubtask.created_at),
+    updatedAt: new Date(dbSubtask.created_at), // Using created_at as updatedAt since it's not in the database
   };
 }
 
@@ -66,6 +71,8 @@ export function transformTaskToCreateData(
     completed: task.completed === undefined ? false : task.completed,
     recurrence: task.recurrence || 'none',
     recurrence_end_date: task.recurrence_end_date?.toISOString() || null,
+    energy_level: task.energyLevel || EnergyLevel.MEDIUM,
+    context_tags: task.contextTags || ['@电脑前'],
   };
 }
 
@@ -95,6 +102,8 @@ export function transformTaskToUpdateData(updates: Partial<Task>): TaskUpdateDat
   if (updates.recurrence_end_date !== undefined) {
     updateData.recurrence_end_date = updates.recurrence_end_date?.toISOString() || null;
   }
+  if (updates.energyLevel !== undefined) updateData.energy_level = updates.energyLevel;
+  if (updates.contextTags !== undefined) updateData.context_tags = updates.contextTags;
 
   return updateData;
 }

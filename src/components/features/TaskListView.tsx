@@ -17,14 +17,20 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
     searchTerm,
     statusFilter,
     priorityFilter,
+    energyLevelFilter,
     selectedTags,
+    selectedContextTags,
     allTags,
+    allContextTags,
     filteredTasks,
     setSearchTerm,
     setStatusFilter,
     setPriorityFilter,
+    setEnergyLevelFilter,
     handleTagToggle,
+    handleContextTagToggle,
     clearTagFilters,
+    clearContextTagFilters,
   } = useTaskFilters({ tasks, showCompleted: false });
 
   const handleTaskStatusToggle = (task: Task) => {
@@ -37,8 +43,6 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
       }
     });
   };
-
-
 
   if (isLoading) {
     return (
@@ -54,13 +58,19 @@ export const TaskListView = ({ onTaskClick }: TaskListViewProps) => {
         searchTerm={searchTerm}
         statusFilter={statusFilter}
         priorityFilter={priorityFilter}
+        energyLevelFilter={energyLevelFilter}
         selectedTags={selectedTags}
+        selectedContextTags={selectedContextTags}
         allTags={allTags}
+        allContextTags={allContextTags}
         onSearchChange={setSearchTerm}
         onStatusFilterChange={setStatusFilter}
         onPriorityFilterChange={setPriorityFilter}
+        onEnergyLevelFilterChange={setEnergyLevelFilter}
         onTagToggle={handleTagToggle}
+        onContextTagToggle={handleContextTagToggle}
         onClearTagFilters={clearTagFilters}
+        onClearContextTagFilters={clearContextTagFilters}
       />
 
       {/* Task List */}

@@ -2,9 +2,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Lock } from "lucide-react";
-import { Task, TaskStatus, TaskPriority } from "@/types/task";
-import { statusOptions, priorityOptions } from "@/utils/taskUtils";
+import { Badge } from "@/components/ui/badge";
+import { Lock, X } from "lucide-react";
+import { Task, TaskStatus, TaskPriority, EnergyLevel } from "@/types/task";
+import { statusOptions, priorityOptions, energyLevelOptions, COMMON_CONTEXT_TAGS, getEnergyLevelLabel } from "@/utils/taskUtils";
+import { useState } from "react";
 
 interface TaskFormProps {
   editedTask: Partial<Task>;
@@ -27,6 +29,21 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   onEstimatedHoursChange,
   onCompletedToggle,
 }) => {
+  const [newContextTag, setNewContextTag] = useState("");
+
+  const handleAddContextTag = (tag: string) => {
+    if (tag && !editedTask.contextTags?.includes(tag)) {
+      const currentTags = editedTask.contextTags || [];
+      onTaskChange({ contextTags: [...currentTags, tag] });
+    }
+    setNewContextTag("");
+  };
+
+  const handleRemoveContextTag = (tagToRemove: string) => {
+    const currentTags = editedTask.contextTags || [];
+    onTaskChange({ contextTags: currentTags.filter(tag => tag !== tagToRemove) });
+  };
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -137,6 +154,91 @@ export const TaskForm: React.FC<TaskFormProps> = ({
               {priorityOptions.find(p => p.value === editedTask.priority)?.label}
             </span>
           )}
+        </div>
+      </div>
+
+      {/* Energy Level and Context Tags */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">
+            精力等级
+          </label>
+          {isEditing ? (
+            <Select
+              value={editedTask.energyLevel || EnergyLevel.MEDIUM}
+              onValueChange={(value) => onTaskChange({ energyLevel: value as EnergyLevel })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {energyLevelOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="text-gray-600">
+              {getEnergyLevelLabel(editedTask.energyLevel || EnergyLevel.MEDIUM)}
+            </span>
+          )}
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">
+            情境标签
+          </label>
+          {isEditing ? (
+            <div className="space-y-2">
+              <div className="flex gap-1">
+                <Input
+                  value={newContextTag}
+                  onChange={(e) => setNewContextTag(e.target.value)}
+                  placeholder="添加情境标签..."
+                  className="flex-1"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddContextTag(newContextTag);
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {COMMON_CONTEXT_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleAddContextTag(tag)}
+                    className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                    disabled={editedTask.contextTags?.includes(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          
+          {/* Display current context tags */}
+          <div className="flex flex-wrap gap-1 mt-2">
+            {editedTask.contextTags?.map((tag) => (
+              <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                {tag}
+                {isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveContextTag(tag)}
+                    className="ml-1 hover:text-red-500"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </Badge>
+            ))}
+          </div>
         </div>
       </div>
 

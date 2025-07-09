@@ -1,9 +1,9 @@
-import { Clock, Calendar, Lock } from "lucide-react";
+import { Clock, Calendar, Lock, Zap } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
 import { differenceInCalendarDays } from "date-fns";
-import { getStatusLabel, getStatusColor, getPriorityLabel, getPriorityColor } from "@/utils/taskUtils";
+import { getStatusLabel, getStatusColor, getPriorityLabel, getPriorityColor, getEnergyLevelLabel, getEnergyLevelColor } from "@/utils/taskUtils";
 import { TaskStatus } from '../../types/task';
 
 interface TaskCardProps {
@@ -50,7 +50,9 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
           checked={checked ?? task.status === TaskStatus.COMPLETED}
           onClick={e => {
             e.stopPropagation();
-            onStatusToggle && onStatusToggle(task);
+            if (onStatusToggle) {
+              onStatusToggle(task);
+            }
           }}
           className="mt-1 mr-2"
         />
@@ -76,6 +78,12 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
             <Badge className={getStatusColor(task.status)}>
               {getStatusLabel(task.status)}
             </Badge>
+            {task.energyLevel && (
+              <Badge className={getEnergyLevelColor(task.energyLevel)}>
+                <Zap className="w-3 h-3 mr-1" />
+                {getEnergyLevelLabel(task.energyLevel)}
+              </Badge>
+            )}
           </div>
         </div>
         {/* 移动端隐藏描述，桌面端显示 */}
@@ -100,14 +108,22 @@ export const TaskCard = ({ task, onClick, showCheckbox = false, checked, onStatu
             )}
           </div>
           <div className="flex gap-1 flex-wrap max-w-[50%]">
-            {task.tags.slice(0, 2).map((tag) => (
+            {/* Context tags first, with limited display */}
+            {task.contextTags?.slice(0, 2).map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs break-words bg-blue-50 text-blue-700 border-blue-200">
+                {tag}
+              </Badge>
+            ))}
+            {/* Regular tags */}
+            {task.tags.slice(0, 1).map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs break-words">
                 {tag}
               </Badge>
             ))}
-            {task.tags.length > 2 && (
+            {/* Show count if more tags exist */}
+            {(task.contextTags?.length || 0) + task.tags.length > 3 && (
               <Badge variant="secondary" className="text-xs break-words">
-                +{task.tags.length - 2}
+                +{(task.contextTags?.length || 0) + task.tags.length - 3}
               </Badge>
             )}
           </div>

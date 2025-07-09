@@ -1,6 +1,6 @@
 
 import { PageLayout } from "@/components/layout/PageLayout";
-import { PriorityMatrix } from "@/components/features/PriorityMatrix";
+import { SmartViews } from "@/components/features/SmartViews";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { useTaskModal } from "@/hooks/useTaskModal";
 
@@ -18,7 +18,7 @@ const Index = () => {
       isQuickAddOpen={isOpen}
       onQuickAddClose={closeQuickAdd}
     >
-      <PriorityMatrix onTaskClick={handleTaskClick} />
+      <SmartViews onTaskClick={handleTaskClick} />
     </PageLayout>
   );
 };

@@ -19,13 +19,13 @@ export interface Task extends BaseEntity {
   completed: boolean;
   recurrence: RecurrenceType;
   recurrence_end_date?: Date;
-  userId?: string;
+  userId: string;
   attachments?: TaskAttachment[];
   reminders?: TaskReminder[];
   progress?: number; // 0-100
   difficulty?: TaskDifficulty;
-  energy?: TaskEnergy;
-  context?: string[];
+  energyLevel: EnergyLevel;
+  contextTags: string[];
 }
 
 export interface Subtask extends BaseEntity {
@@ -61,7 +61,7 @@ export enum TaskDifficulty {
   VERY_HARD = "very_hard"
 }
 
-export enum TaskEnergy {
+export enum EnergyLevel {
   LOW = "low",
   MEDIUM = "medium",
   HIGH = "high"
@@ -108,6 +108,8 @@ export interface TaskFilters {
   assignee?: string[];
   project?: string[];
   search?: string;
+  energyLevel?: EnergyLevel[];
+  contextTags?: string[];
 }
 
 // Task analytics types
